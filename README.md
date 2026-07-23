@@ -1,5 +1,11 @@
 # RS Medika Sentosa — Hospital Enterprise Web Application
 
+[![CI](https://github.com/arityo182/portofolio-belajar/actions/workflows/ci.yml/badge.svg)](https://github.com/arityo182/portofolio-belajar/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-119%20passed-brightgreen)]()
+[![Java](https://img.shields.io/badge/java-21-blue)]()
+[![Spring Boot](https://img.shields.io/badge/spring--boot-4.1.0-green)]()
+[![React](https://img.shields.io/badge/react-19-61dafb)]()
+
 Sistem informasi rumah sakit full-stack yang mengintegrasikan layanan administratif (pendaftaran pasien, janji temu, rekam medis) dengan fitur unggulan skrining osteoporosis berbasis kecerdasan buatan. Dibangun sebagai proyek tugas akhir sekaligus portofolio untuk lamaran magang dan CPNS, mengikuti standar ISO/IEC/IEEE 29148:2018 untuk requirements engineering.
 
 Mengintegrasikan tiga layanan independen — React (frontend), Spring Boot (backend utama), dan FastAPI (ML service) — dengan model deep learning custom EfficientNetV2 untuk klasifikasi tiga kelas osteoporosis dari citra X-ray, lengkap dengan visualisasi Grad-CAM dan Otsu thresholding.
@@ -427,8 +433,8 @@ Fase 3 berfokus pada keuangan, deployment produksi, dan observability. Belum ada
 
 - Billing & pembayaran (tunai, transfer, kartu)
 - Docker & docker-compose untuk ketiga layanan
-- CI/CD pipeline (GitHub Actions)
-- Prometheus + Grafana untuk monitoring
+- ✅ CI/CD pipeline (GitHub Actions)
+- ✅ Prometheus + Grafana untuk monitoring
 - Pengujian otomatis menyeluruh (JUnit, Mockito, Playwright)
 - Swagger untuk seluruh endpoint + Insomnia collection
 
@@ -485,6 +491,31 @@ docker compose build --no-cache   # Build ulang dari awal
 | ML Service | `medika-ml-service` | 8001 |
 | PostgreSQL | `medika-postgres` | 5432 |
 | Redis | `medika-redis` | 6379 |
+
+---
+
+## CI/CD — GitHub Actions
+
+[![CI](https://github.com/arityo182/portofolio-belajar/actions/workflows/ci.yml/badge.svg)](https://github.com/arityo182/portofolio-belajar/actions/workflows/ci.yml)
+
+Pipeline otomatis jalan setiap **push** ke `main`/`develop` dan **pull request**.
+
+### Jobs
+
+| Job | Apa yang dicek |
+|-----|---------------|
+| **backend-test** | `./gradlew test` — 119 unit tests (Java 21, PostgreSQL) |
+| **ml-service-check** | Python imports, dependencies OK (model tidak di-load) |
+| **frontend-check** | `tsc --noEmit` + `npm run build` |
+| **docker-build** | Build semua Docker image (setelah 3 job sukses) |
+
+### Cara trigger
+
+```bash
+git push origin main
+```
+
+Cek hasil di tab **Actions** di GitHub → klik workflow → klik job yang fail untuk lihat log.
 
 ---
 
