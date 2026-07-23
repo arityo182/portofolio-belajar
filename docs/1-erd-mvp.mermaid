@@ -1,0 +1,92 @@
+erDiagram
+    users ||--o| pasien : "punya profil"
+    users ||--o| dokter : "punya profil"
+    poli ||--o{ dokter : "menaungi"
+    dokter ||--o{ jadwal_dokter : "punya"
+    pasien ||--o{ appointment : "membuat"
+    dokter ||--o{ appointment : "menerima"
+    jadwal_dokter ||--o{ appointment : "dipakai"
+    appointment ||--|| antrian : "menghasilkan"
+    appointment ||--|| rekam_medis : "menghasilkan"
+    pasien ||--o{ rekam_medis : "punya"
+    dokter ||--o{ rekam_medis : "menulis"
+    rekam_medis ||--o{ resep : "berisi"
+    users ||--o{ screening : "melakukan"
+
+    users {
+        bigint id PK
+        varchar nama
+        varchar email UK
+        varchar password
+        enum role
+        timestamp created_at
+    }
+    pasien {
+        bigint id PK
+        bigint user_id FK
+        varchar no_rekam_medis UK
+        varchar nik
+        date tanggal_lahir
+        enum jenis_kelamin
+        varchar no_hp
+    }
+    dokter {
+        bigint id PK
+        bigint user_id FK
+        bigint poli_id FK
+        varchar no_str
+        varchar spesialisasi
+    }
+    poli {
+        bigint id PK
+        varchar nama
+        boolean is_active
+    }
+    jadwal_dokter {
+        bigint id PK
+        bigint dokter_id FK
+        enum hari
+        time jam_mulai
+        time jam_selesai
+        int kuota
+    }
+    appointment {
+        bigint id PK
+        bigint pasien_id FK
+        bigint dokter_id FK
+        bigint jadwal_id FK
+        date tanggal
+        enum status
+        text keluhan
+    }
+    antrian {
+        bigint id PK
+        bigint appointment_id FK
+        varchar nomor_antrian
+        enum status
+    }
+    rekam_medis {
+        bigint id PK
+        bigint pasien_id FK
+        bigint dokter_id FK
+        bigint appointment_id FK
+        text anamnesa
+        text diagnosa
+        text tindakan
+    }
+    resep {
+        bigint id PK
+        bigint rekam_medis_id FK
+        varchar nama_obat
+        int jumlah
+        varchar aturan_pakai
+    }
+    screening {
+        bigint id PK
+        bigint user_id FK
+        varchar label
+        double confidence
+        text gradcam_image
+        bigint latency_ms
+        timestamp created_at
+    }

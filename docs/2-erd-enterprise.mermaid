@@ -1,0 +1,177 @@
+erDiagram
+    users ||--o| pasien : ""
+    users ||--o| dokter : ""
+    poli ||--o{ dokter : ""
+    dokter ||--o{ jadwal_dokter : ""
+    pasien ||--o{ appointment : ""
+    dokter ||--o{ appointment : ""
+    jadwal_dokter ||--o{ appointment : ""
+    appointment ||--|| antrian : ""
+    appointment ||--|| rekam_medis : ""
+    pasien ||--o{ rekam_medis : ""
+    dokter ||--o{ rekam_medis : ""
+    rekam_medis ||--o{ resep : ""
+    obat ||--o{ resep : ""
+    users ||--o{ screening : ""
+
+    rekam_medis ||--o{ lab_order : ""
+    lab_order ||--o{ lab_hasil : ""
+    rekam_medis ||--o{ radiologi : ""
+    screening ||--o| radiologi : ""
+    pasien ||--o{ rawat_inap : ""
+    kamar ||--o{ rawat_inap : ""
+    dokter ||--o{ rawat_inap : ""
+    pasien ||--o{ jadwal_operasi : ""
+    dokter ||--o{ jadwal_operasi : ""
+
+    pasien ||--o{ billing : ""
+    appointment ||--o| billing : ""
+    rawat_inap ||--o| billing : ""
+    billing ||--o{ billing_item : ""
+    billing ||--o{ pembayaran : ""
+
+    users ||--o{ chat_session : ""
+    chat_session ||--o{ chat_message : ""
+
+    users {
+        bigint id PK
+        varchar email UK
+        enum role
+    }
+    pasien {
+        bigint id PK
+        bigint user_id FK
+        varchar no_rekam_medis UK
+        varchar nik
+    }
+    dokter {
+        bigint id PK
+        bigint user_id FK
+        bigint poli_id FK
+        varchar no_str
+    }
+    poli {
+        bigint id PK
+        varchar nama
+    }
+    jadwal_dokter {
+        bigint id PK
+        bigint dokter_id FK
+        enum hari
+        int kuota
+    }
+    appointment {
+        bigint id PK
+        bigint pasien_id FK
+        bigint dokter_id FK
+        bigint jadwal_id FK
+        enum status
+    }
+    antrian {
+        bigint id PK
+        bigint appointment_id FK
+        varchar nomor_antrian
+    }
+    rekam_medis {
+        bigint id PK
+        bigint pasien_id FK
+        bigint dokter_id FK
+        bigint appointment_id FK
+        text diagnosa
+    }
+    resep {
+        bigint id PK
+        bigint rekam_medis_id FK
+        bigint obat_id FK
+        int jumlah
+    }
+    obat {
+        bigint id PK
+        varchar nama
+        decimal harga
+        int stok
+    }
+    screening {
+        bigint id PK
+        bigint user_id FK
+        varchar label
+        double confidence
+        text gradcam_image
+    }
+    lab_order {
+        bigint id PK
+        bigint rekam_medis_id FK
+        varchar jenis_tes
+        enum status
+    }
+    lab_hasil {
+        bigint id PK
+        bigint lab_order_id FK
+        varchar parameter
+        varchar nilai
+    }
+    radiologi {
+        bigint id PK
+        bigint rekam_medis_id FK
+        bigint screening_id FK
+        varchar jenis
+        text hasil_baca
+    }
+    kamar {
+        bigint id PK
+        varchar nomor_kamar
+        enum kelas
+        decimal tarif_per_hari
+        enum status
+    }
+    rawat_inap {
+        bigint id PK
+        bigint pasien_id FK
+        bigint kamar_id FK
+        bigint dokter_id FK
+        timestamp tanggal_masuk
+        enum status
+    }
+    jadwal_operasi {
+        bigint id PK
+        bigint pasien_id FK
+        bigint dokter_id FK
+        varchar nama_operasi
+        timestamp tanggal
+        enum status
+    }
+    billing {
+        bigint id PK
+        bigint pasien_id FK
+        bigint appointment_id FK
+        bigint rawat_inap_id FK
+        decimal total
+        enum status
+    }
+    billing_item {
+        bigint id PK
+        bigint billing_id FK
+        varchar deskripsi
+        int qty
+        decimal subtotal
+    }
+    pembayaran {
+        bigint id PK
+        bigint billing_id FK
+        enum metode
+        decimal jumlah_bayar
+        enum status
+    }
+    chat_session {
+        bigint id PK
+        bigint user_id FK
+        varchar judul
+        timestamp created_at
+    }
+    chat_message {
+        bigint id PK
+        bigint session_id FK
+        enum role
+        text content
+        timestamp created_at
+    }

@@ -1,0 +1,31 @@
+flowchart TD
+    PASIEN([Pasien])
+    DOKTER([Dokter])
+
+    PASIEN --> LOGIN[Login / Register]
+    LOGIN --> USERS[(users)]
+
+    PASIEN --> DAFTAR[Daftar Pasien]
+    DAFTAR --> TPASIEN[(pasien)]
+
+    PASIEN --> BOOKING[Booking Appointment]
+    BOOKING --> TJADWAL[(jadwal_dokter)]
+    BOOKING --> TAPPT[(appointment)]
+    TAPPT --> TANTRIAN[(antrian)]
+
+    TANTRIAN --> PERIKSA[Diperiksa Dokter]
+    DOKTER --> PERIKSA
+    PERIKSA --> TREKAM[(rekam_medis)]
+    TREKAM --> TRESEP[(resep)]
+
+    PASIEN --> UPLOAD[Upload X-Ray]
+    UPLOAD --> SCREEN[Skrining AI]
+    SCREEN --> TSCREEN[(screening)]
+
+    classDef mvp fill:#E4F4FD,stroke:#172E74,color:#172E74
+    classDef aktor fill:#172E74,stroke:#172E74,color:#fff
+    classDef proses fill:#FDEBD7,stroke:#EF7A00,color:#7A3D00
+
+    class PASIEN,DOKTER aktor
+    class USERS,TPASIEN,TJADWAL,TAPPT,TANTRIAN,TREKAM,TRESEP,TSCREEN mvp
+    class LOGIN,DAFTAR,BOOKING,PERIKSA,UPLOAD,SCREEN proses

@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://claude.ai/chat/e5281574-e775-4a54-9f62-30396fa6187d
+HostUrl=https://claude.ai/api/organizations/ed5eb504-2f63-4186-8a31-205c172031a0/conversations/e5281574-e775-4a54-9f62-30396fa6187d/wiggle/download-files?paths=%2Fmnt%2Fuser-data%2Foutputs%2Fprompt-audit-claude-code.md&paths=%2Fmnt%2Fuser-data%2Foutputs%2Fsrs-rs-medika-sentosa.md&paths=%2Fmnt%2Fuser-data%2Foutputs%2Ferd-rs-medika-sentosa.md&paths=%2Fmnt%2Fuser-data%2Foutputs%2FREADME.md&paths=%2Fmnt%2Fuser-data%2Foutputs%2F1-erd-mvp.mermaid&paths=%2Fmnt%2Fuser-data%2Foutputs%2F2-erd-enterprise.mermaid&paths=%2Fmnt%2Fuser-data%2Foutputs%2F3-alur-mvp.mermaid&paths=%2Fmnt%2Fuser-data%2Foutputs%2F4-alur-enterprise.mermaid

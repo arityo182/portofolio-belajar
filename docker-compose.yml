@@ -1,0 +1,142 @@
+# ============================================
+# DOCKER COMPOSE — RS Medika Sentosa
+# ============================================
+# Setup:
+#   cp .env.example .env   (isi env vars)
+#   docker compose up -d   (jalankan semua)
+#   docker compose down    (hentikan)
+#   docker compose logs -f [service]
+# ============================================
+
+services:
+
+  # ─── PostgreSQL 16 ───────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: medika-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-medika_sentosa}
+      POSTGRES_USER: ${POSTGRES_USER:-core}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-arie12345}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-core} -d ${POSTGRES_DB:-medika_sentosa}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis 7 ─────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: medika-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend Spring Boot ─────────────────────
+  backend:
+    build:
+      context: ./medikasentosa
+      dockerfile: Dockerfile
+    container_name: medika-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-medika_sentosa}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-core}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-arie12345}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      APP_FASTAPI_URL: ${FASTAPI_URL:-http://ml-service:8001}
+      SPRING_CACHE_TYPE: ${SPRING_CACHE_TYPE:-simple}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -so /dev/null http://localhost:8080/ || curl -so /dev/null http://localhost:8080/swagger-ui/index.html || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ─── ML Service (FastAPI + TensorFlow) ────────
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: medika-ml-service
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # ─── Frontend (Nginx) ────────────────────────
+  frontend:
+    build:
+      context: ./hospital-frontend
+      dockerfile: Dockerfile
+    container_name: medika-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # ─── Prometheus ──────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: medika-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    depends_on:
+      - backend
+
+  # ─── Grafana ──────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: medika-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: ""
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:

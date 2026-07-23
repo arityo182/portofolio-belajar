@@ -1,0 +1,2600 @@
+type: collection.insomnia.rest/5.0
+schema_version: '5.1'
+name: RS Medika Sentosa - Fase 2 dan 3 (Keuangan & Production)
+meta:
+  id: wrk_1519bbc4332f4ab8a0d4e9d8f4799b9c
+  created: 1784833079514
+  modified: 1784833387546
+  description: ''
+collection:
+- name: 9 - Obat (Fase 2)
+  meta:
+    id: fld_1949ce656af948fa8e4eae3d137664ec
+    created: 1782580001000
+    modified: 1784833240908
+    sortKey: -1782590500850
+    description: Master data obat. Butuh JWT. Create/Update/Delete admin only.
+  children:
+  - url: '{{ _.base_url }}/api/obat'
+    name: Create Obat
+    meta:
+      id: req_95faf55755dd4590a6cde6bba9d41641
+      created: 1782580002000
+      modified: 1782580002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk menambah master data obat baru.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin only)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | nama | mandatory |
+
+        | kategori | mandatory |
+
+        | satuan | mandatory |
+
+        | stok | mandatory |
+
+        | harga | mandatory |
+
+        | deskripsi | optional |
+
+
+        **Keterangan :**
+
+
+        nama harus unik. satuan mis. "tablet/kapsul/ml/botol".
+
+        kategori mis. "Antihipertensi/Antibiotik/Analgesik".
+
+        Response 201: { id, nama, kategori, satuan, stok, harga, isActive:true }.
+
+        Error 409: nama obat sudah ada. Error 403: bukan admin.'
+      sortKey: -1782580002000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"nama\": \"Amlodipine 5mg\",\n  \"kategori\": \"Antihipertensi\"\
+        ,\n  \"satuan\": \"tablet\",\n  \"stok\": 500,\n  \"harga\": 2500,\n  \"deskripsi\"\
+        : \"Obat penurun tekanan darah golongan CCB\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/obat'
+    name: Get All Obat
+    meta:
+      id: req_cc7fa5cdc973431b80faf3704194c57b
+      created: 1782580003000
+      modified: 1782580003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh data obat.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array obat (termasuk yang nonaktif).'
+      sortKey: -1782580003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/obat/1'
+    name: Get Obat by ID
+    meta:
+      id: req_8190ad15da53476c9b0d31b837fe63ca
+      created: 1782580004000
+      modified: 1782580004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan detail satu obat berdasarkan id.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id obat. Error 404 bila tidak ada.'
+      sortKey: -1782580004000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/obat/1'
+    name: Update Obat
+    meta:
+      id: req_e712dfe85b8141a99b37c316b8832a1c
+      created: 1782580005000
+      modified: 1782580005000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Mengubah data obat.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin only)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | nama | mandatory |
+
+        | kategori | mandatory |
+
+        | satuan | mandatory |
+
+        | stok | mandatory |
+
+        | harga | mandatory |
+
+        | deskripsi | optional |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id obat.'
+      sortKey: -1782580005000
+    method: PUT
+    body:
+      mimeType: application/json
+      text: "{\n  \"nama\": \"Amlodipine 5mg\",\n  \"kategori\": \"Antihipertensi\"\
+        ,\n  \"satuan\": \"tablet\",\n  \"stok\": 450,\n  \"harga\": 2500,\n  \"deskripsi\"\
+        : \"Obat penurun tekanan darah golongan CCB - update stok\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/obat/1'
+    name: Deactivate Obat
+    meta:
+      id: req_771049a6e47d4c2da39ac1716f1b44f6
+      created: 1782580006000
+      modified: 1782580006000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menonaktifkan obat (soft delete, isActive jadi false).
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin only)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id obat. Response 204: no content.'
+      sortKey: -1782580006000
+    method: DELETE
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+- name: 10 - Laboratorium (Fase 2)
+  meta:
+    id: fld_f479db79cc6f43208a4657f7fd6bf186
+    created: 1782581000000
+    modified: 1784833237702
+    sortKey: -1782590500750
+    description: Order lab & hasil. Prasyarat rekam medis. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/lab/order'
+    name: Create Lab Order
+    meta:
+      id: req_5cb14d1e3f3c4ed6bfa0bbc32e343eb5
+      created: 1782581001000
+      modified: 1782581001000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk membuat order pemeriksaan laboratorium dari rekam medis.
+
+
+        **Hak Akses :**
+
+
+        JWT (Dokter/Admin)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | rekamMedisId | mandatory |
+
+        | jenisPemeriksaan | mandatory |
+
+        | catatan | optional |
+
+
+        **Keterangan :**
+
+
+        jenisPemeriksaan mis. "Darah Lengkap", "Gula Darah Puasa",
+
+        "Kolesterol Total", "Fungsi Ginjal". Response 201: lab order
+
+        dengan status MENUNGGU. Error 404: rekam medis tidak ada.'
+      sortKey: -1782581001000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"rekamMedisId\": 1,\n  \"jenisPemeriksaan\": \"Darah Lengkap\"\
+        ,\n  \"catatan\": \"Cek hemoglobin dan trombosit\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/lab/order'
+    name: Get All Lab Order
+    meta:
+      id: req_ec3003dabad740c697e570750cd3bf41
+      created: 1782581002000
+      modified: 1782581002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh order laboratorium.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array lab order.'
+      sortKey: -1782581002000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/lab/order/rekam-medis/1'
+    name: Get Lab Order by Rekam Medis
+    meta:
+      id: req_81422853574b455aa794b3940644085d
+      created: 1782581003000
+      modified: 1782581003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan daftar order lab dari suatu rekam medis.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {rekamMedisId} pada URL diganti sesuai id rekam medis.'
+      sortKey: -1782581003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/lab/order/1/status?status=PROSES'
+    name: Update Status Lab Order
+    meta:
+      id: req_2fcc74ce49104b18b403c5e6fa8d2e58
+      created: 1782581004000
+      modified: 1782581004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Mengubah status order laboratorium.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin/Lab)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Query Param :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | status | mandatory |
+
+
+        **Keterangan :**
+
+
+        status == (MENUNGGU, PROSES, SELESAI).
+
+        {id} pada URL diganti sesuai id lab order.'
+      sortKey: -1782581004000
+    method: PATCH
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+  - url: '{{ _.base_url }}/api/lab/hasil'
+    name: Create Lab Hasil
+    meta:
+      id: req_2f14d84a699248f49131a415fa8e60dc
+      created: 1782581005000
+      modified: 1782581005000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk mengisi hasil pemeriksaan laboratorium. Status order
+
+        otomatis berubah jadi SELESAI.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin/Lab)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | labOrderId | mandatory |
+
+        | hasilText | mandatory |
+
+        | nilaiNormal | optional |
+
+        | interpretasi | optional |
+
+
+        **Keterangan :**
+
+
+        Satu lab order hanya boleh punya satu hasil.
+
+        Error 404: lab order tidak ada. Error 409: hasil sudah ada.'
+      sortKey: -1782581005000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"labOrderId\": 1,\n  \"hasilText\": \"Hemoglobin: 12.5 g/dL, Trombosit:\
+        \ 220.000/uL, Leukosit: 8.500/uL\",\n  \"nilaiNormal\": \"Hb: 12-16 g/dL,\
+        \ Trombosit: 150.000-400.000/uL\",\n  \"interpretasi\": \"Hasil dalam batas\
+        \ normal\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/lab/hasil/order/1'
+    name: Get Lab Hasil by Order
+    meta:
+      id: req_bd3c8f68c7ad4d41ba8ec11edc7a12ca
+      created: 1782581006000
+      modified: 1782581006000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan hasil lab dari suatu order.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {labOrderId} pada URL diganti sesuai id lab order.'
+      sortKey: -1782581006000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+- name: 11 - Radiologi (Fase 2)
+  meta:
+    id: fld_c8bbde0120cd4a2dbb55eb8f930d3f9e
+    created: 1782582000000
+    modified: 1784833233770
+    sortKey: -1782590500650
+    description: Order radiologi & hasil. Prasyarat rekam medis. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/radiologi'
+    name: Create Order Radiologi
+    meta:
+      id: req_aeffa8f918d2458eadf3488521516561
+      created: 1782582001000
+      modified: 1782582001000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk membuat order pemeriksaan radiologi dari rekam medis.
+
+
+        **Hak Akses :**
+
+
+        JWT (Dokter/Admin)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | rekamMedisId | mandatory |
+
+        | jenisRadiologi | mandatory |
+
+        | catatanDokter | optional |
+
+
+        **Keterangan :**
+
+
+        jenisRadiologi mis. "X-Ray Dada", "X-Ray Tangan",
+
+        "CT-Scan Kepala", "MRI Lutut", "USG Abdomen".
+
+        Response 201: order radiologi status MENUNGGU.'
+      sortKey: -1782582001000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"rekamMedisId\": 1,\n  \"jenisRadiologi\": \"X-Ray Dada\",\n  \"\
+        catatanDokter\": \"Cek kondisi paru-paru\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/radiologi'
+    name: Get All Radiologi
+    meta:
+      id: req_fe30213d57a94a12a1032493ff3b8edb
+      created: 1782582002000
+      modified: 1782582002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh order radiologi.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array order radiologi.'
+      sortKey: -1782582002000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/radiologi/rekam-medis/1'
+    name: Get Radiologi by Rekam Medis
+    meta:
+      id: req_09f39fdef6074fd2b51ba30e4240cb62
+      created: 1782582003000
+      modified: 1782582003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan order radiologi dari suatu rekam medis.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {rekamMedisId} pada URL diganti sesuai id rekam medis.'
+      sortKey: -1782582003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/radiologi/1/hasil'
+    name: Update Hasil Radiologi
+    meta:
+      id: req_0a4d65cd1ad4441abefb7501dd2723b8
+      created: 1782582004000
+      modified: 1782582004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Mengisi hasil pemeriksaan radiologi. Status berubah jadi SELESAI.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin/Radiologi)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | hasilDeskripsi | mandatory |
+
+        | gambarUrl | optional |
+
+        | catatanDokter | optional |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id order radiologi.
+
+        gambarUrl = path/URL gambar hasil radiologi (opsional).'
+      sortKey: -1782582004000
+    method: PUT
+    body:
+      mimeType: application/json
+      text: "{\n  \"hasilDeskripsi\": \"Tidak tampak infiltrat atau konsolidasi. Jantung\
+        \ tidak membesar. Kesan: paru dalam batas normal.\",\n  \"gambarUrl\": \"\
+        /uploads/radiologi/xray-dada-001.jpg\",\n  \"catatanDokter\": \"Hasil normal,\
+        \ tidak ada kelainan bermakna\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 12 - Rawat Inap & Kamar (Fase 2)
+  meta:
+    id: fld_f85a13454bf8481cba67f61d8739a26f
+    created: 1782583000000
+    modified: 1784833212761
+    sortKey: -1782590500550
+    description: Kelola kamar & rawat inap pasien. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/kamar'
+    name: Create Kamar
+    meta:
+      id: req_8f4ca4adbc734ec1b270f3deff96c690
+      created: 1782583001000
+      modified: 1782583001000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk menambah data kamar rawat inap.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin only)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | nomorKamar | mandatory |
+
+        | tipeKamar | mandatory |
+
+        | kapasitas | mandatory |
+
+        | hargaPerMalam | mandatory |
+
+
+        **Keterangan :**
+
+
+        tipeKamar == (REGULER, VIP, VVIP, ICU).
+
+        nomorKamar harus unik. Response 201: data kamar.'
+      sortKey: -1782583001000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"nomorKamar\": \"A-101\",\n  \"tipeKamar\": \"REGULER\",\n  \"\
+        kapasitas\": 4,\n  \"hargaPerMalam\": 350000\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/kamar'
+    name: Get All Kamar
+    meta:
+      id: req_f1126e964c924afa91eac742942f38a4
+      created: 1782583002000
+      modified: 1782583002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh data kamar.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array kamar dengan info kapasitas & terisi.'
+      sortKey: -1782583002000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/kamar/available'
+    name: Get Kamar Tersedia
+    meta:
+      id: req_9c5fc89157e8452c97cfcb5a3288661a
+      created: 1782583003000
+      modified: 1782583003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan kamar yang masih tersedia (terisi < kapasitas).
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Dipakai saat admin ingin memasukkan pasien rawat inap.'
+      sortKey: -1782583003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/rawat-inap/masuk'
+    name: Pasien Masuk Rawat Inap
+    meta:
+      id: req_3fc686ab32044864aae3aa0808b274f8
+      created: 1782583004000
+      modified: 1782583004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Mendaftarkan pasien masuk rawat inap. Terisi kamar otomatis
+
+        bertambah 1.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | pasienId | mandatory |
+
+        | dokterId | mandatory |
+
+        | kamarId | mandatory |
+
+        | tanggalMasuk | mandatory |
+
+        | diagnosaAwal | mandatory |
+
+        | catatan | optional |
+
+
+        **Keterangan :**
+
+
+        Validasi: kamar harus tersedia (terisi < kapasitas).
+
+        tanggalMasuk format YYYY-MM-DD.
+
+        Response 201: rawat inap status AKTIF.'
+      sortKey: -1782583004000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"pasienId\": 1,\n  \"dokterId\": 1,\n  \"kamarId\": 1,\n  \"tanggalMasuk\"\
+        : \"2026-07-20\",\n  \"diagnosaAwal\": \"Hipertensi berat perlu observasi\"\
+        ,\n  \"catatan\": \"Monitor tekanan darah tiap 4 jam\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/rawat-inap/1/keluar'
+    name: Pasien Keluar Rawat Inap
+    meta:
+      id: req_1fd29fd99a884154b0b5f5c973c8f239
+      created: 1782583005000
+      modified: 1782583005000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Memproses kepulangan pasien rawat inap. Terisi kamar otomatis
+
+        berkurang 1, status rawat inap jadi SELESAI.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | tanggalKeluar | mandatory |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id rawat inap.
+
+        tanggalKeluar format YYYY-MM-DD.'
+      sortKey: -1782583005000
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: "{\n  \"tanggalKeluar\": \"2026-07-24\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/rawat-inap/aktif'
+    name: Get Rawat Inap Aktif
+    meta:
+      id: req_410827c8ae054b9fb8d1594211f515e4
+      created: 1782583006000
+      modified: 1782583006000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan pasien yang sedang dirawat inap (status AKTIF).
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array rawat inap aktif.'
+      sortKey: -1782583006000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/rawat-inap/pasien/1'
+    name: Get Rawat Inap by Pasien
+    meta:
+      id: req_54d1bdb11b0a4dca9d71c6fda083ce89
+      created: 1782583007000
+      modified: 1782583007000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan riwayat rawat inap seorang pasien.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {pasienId} pada URL diganti sesuai id pasien.'
+      sortKey: -1782583007000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+- name: 13 - Jadwal Operasi (Fase 2)
+  meta:
+    id: fld_9834c8f363ba4579b4aa2ff585cd8df3
+    created: 1782584000000
+    modified: 1784833177385
+    sortKey: -1782590001100
+    description: Penjadwalan operasi pasien. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/operasi'
+    name: Create Jadwal Operasi
+    meta:
+      id: req_aafb29b684944e7b925400b07223ab6b
+      created: 1782584001000
+      modified: 1782584001000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk membuat jadwal operasi pasien.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin/Dokter)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | pasienId | mandatory |
+
+        | dokterId | mandatory |
+
+        | tanggalOperasi | mandatory |
+
+        | jamMulai | mandatory |
+
+        | jenisOperasi | mandatory |
+
+        | ruangOperasi | mandatory |
+
+        | catatan | optional |
+
+
+        **Keterangan :**
+
+
+        tanggalOperasi format YYYY-MM-DD, tidak boleh masa lalu.
+
+        jamMulai format HH:mm. Response 201: jadwal status TERJADWAL.'
+      sortKey: -1782584001000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"pasienId\": 1,\n  \"dokterId\": 1,\n  \"tanggalOperasi\": \"2026-08-01\"\
+        ,\n  \"jamMulai\": \"08:00\",\n  \"jenisOperasi\": \"Operasi Caesar\",\n \
+        \ \"ruangOperasi\": \"OK-1\",\n  \"catatan\": \"Persiapan puasa 6 jam sebelum\
+        \ operasi\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/operasi'
+    name: Get All Jadwal Operasi
+    meta:
+      id: req_3de37afd4dec425983c3735636d887cd
+      created: 1782584002000
+      modified: 1782584002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh jadwal operasi.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array jadwal operasi.'
+      sortKey: -1782584002000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/operasi/pasien/1'
+    name: Get Operasi by Pasien
+    meta:
+      id: req_fd6b902119264e0c91e6d04292c15c8d
+      created: 1782584003000
+      modified: 1782584003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan jadwal operasi seorang pasien.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {pasienId} pada URL diganti sesuai id pasien.'
+      sortKey: -1782584003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/operasi/1/status?status=BERLANGSUNG'
+    name: Update Status Operasi
+    meta:
+      id: req_476a94582b894f68bea00d569aa76feb
+      created: 1782584004000
+      modified: 1782584004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Mengubah status jadwal operasi.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin/Dokter)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Query Param :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | status | mandatory |
+
+
+        **Keterangan :**
+
+
+        status == (TERJADWAL, BERLANGSUNG, SELESAI, BATAL).
+
+        {id} pada URL diganti sesuai id jadwal operasi.'
+      sortKey: -1782584004000
+    method: PATCH
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+- name: 14 - Billing & Tagihan (Fase 3)
+  meta:
+    id: fld_f5ea99eba4a949938206d0d466ccd062
+    created: 1782590001000
+    modified: 1784833347943
+    sortKey: -1782590001075
+    description: Generate & kelola tagihan pasien. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/billing/generate/appointment/1'
+    name: Generate Billing dari Appointment
+    meta:
+      id: req_754a5d8eb7e247dca38ee6c9002cfa9c
+      created: 1782590002000
+      modified: 1782590002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk membuat tagihan otomatis dari sebuah appointment yang
+
+        sudah selesai. Item pertama (biaya konsultasi) otomatis dibuat.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin only)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {appointmentId} pada URL diganti sesuai id appointment.
+
+        Appointment harus berstatus SELESAI.
+
+        Response 201: billing baru dengan 1 billing_item (konsultasi).
+
+        Error 404: appointment tidak ada.
+
+        Error 400: appointment belum selesai.'
+      sortKey: -1782590002000
+    method: POST
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+  - url: '{{ _.base_url }}/api/billing/1/item'
+    name: Tambah Item Billing
+    meta:
+      id: req_d596f2d99a7d420bbfbdbfd35c80c4e4
+      created: 1782590003000
+      modified: 1782590003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk menambah item ke dalam billing yang belum lunas.
+
+        Total billing otomatis dihitung ulang.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin only)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | deskripsi | mandatory |
+
+        | jumlah | mandatory |
+
+        | hargaSatuan | mandatory |
+
+
+        **Keterangan :**
+
+
+        {billingId} pada URL diganti sesuai id billing.
+
+        subtotal dihitung otomatis: jumlah * hargaSatuan.
+
+        Error 400: billing sudah lunas atau dibatalkan.'
+      sortKey: -1782590003000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"deskripsi\": \"Pemeriksaan Lab: Darah Lengkap\",\n  \"jumlah\"\
+        : 1,\n  \"hargaSatuan\": 85000\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/billing'
+    name: Get All Billing
+    meta:
+      id: req_80e6db323601411f9751bcd7da9e4e96
+      created: 1782590004000
+      modified: 1782590004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh tagihan.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array billing dengan total & status.'
+      sortKey: -1782590004000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/billing/1'
+    name: Get Billing by ID
+    meta:
+      id: req_185f3958da984a3ea54c36ba00a7b628
+      created: 1782590005000
+      modified: 1782590005000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan detail tagihan beserta semua item billing.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id billing.
+
+        Response: billing + array billing_item + totalHarga.'
+      sortKey: -1782590005000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/billing/pasien/1'
+    name: Get Billing by Pasien
+    meta:
+      id: req_d018039080824050aca91c05f9755b4c
+      created: 1782590006000
+      modified: 1782590006000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan riwayat tagihan seorang pasien.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {pasienId} pada URL diganti sesuai id pasien.'
+      sortKey: -1782590006000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/billing/1/batal'
+    name: Batalkan Billing
+    meta:
+      id: req_9f403fb5d767421bb3825e895bfc3585
+      created: 1782590007000
+      modified: 1782590007000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Membatalkan tagihan (status jadi DIBATALKAN).
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin only)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id billing.
+
+        Billing yang sudah LUNAS tidak bisa dibatalkan.
+
+        Response 200: billing dengan status DIBATALKAN.'
+      sortKey: -1782590007000
+    method: PATCH
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+- name: 15 - Pembayaran (Fase 3)
+  meta:
+    id: fld_e84c81657ff944bfad3045ba586d665e
+    created: 1782591000000
+    modified: 1784833342011
+    sortKey: -1782590001050
+    description: Proses pembayaran tagihan. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/pembayaran/proses'
+    name: Proses Pembayaran
+    meta:
+      id: req_e60e78b2c4254df789504f77e385daf6
+      created: 1782591001000
+      modified: 1782591001000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk memproses pembayaran tagihan. Billing otomatis berubah
+
+        jadi LUNAS jika jumlah bayar mencukupi.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | billingId | mandatory |
+
+        | metodePembayaran | mandatory |
+
+        | jumlahBayar | mandatory |
+
+        | buktiTransfer | optional |
+
+
+        **Keterangan :**
+
+
+        metodePembayaran == (TUNAI, TRANSFER, KARTU, BPJS).
+
+        jumlahBayar harus >= totalHarga billing.
+
+        buktiTransfer = URL/path bukti (wajib jika metode TRANSFER).
+
+        BPJS: dicatat saja, integrasi V-Claim belum aktif (TODO).
+
+        Error 400: billing sudah lunas / jumlah bayar kurang.
+
+        Error 404: billing tidak ada.'
+      sortKey: -1782591001000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"billingId\": 1,\n  \"metodePembayaran\": \"TRANSFER\",\n  \"jumlahBayar\"\
+        : 185000,\n  \"buktiTransfer\": \"/uploads/bukti/transfer-001.jpg\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/pembayaran/proses'
+    name: Proses Pembayaran (Tunai)
+    meta:
+      id: req_34db458e9c1b49c39c9874322ccecc50
+      created: 1782591002000
+      modified: 1782591002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Contoh pembayaran metode tunai (tanpa bukti transfer).
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | billingId | mandatory |
+
+        | metodePembayaran | mandatory |
+
+        | jumlahBayar | mandatory |
+
+        | buktiTransfer | optional |
+
+
+        **Keterangan :**
+
+
+        Untuk TUNAI, buktiTransfer tidak diperlukan.'
+      sortKey: -1782591002000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"billingId\": 2,\n  \"metodePembayaran\": \"TUNAI\",\n  \"jumlahBayar\"\
+        : 100000\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/pembayaran/billing/1'
+    name: Get Pembayaran by Billing
+    meta:
+      id: req_448716aab39141d6b27de98ff7fa6c9a
+      created: 1782591003000
+      modified: 1782591003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan detail pembayaran dari suatu billing.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {billingId} pada URL diganti sesuai id billing.'
+      sortKey: -1782591003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/pembayaran'
+    name: Get All Pembayaran
+    meta:
+      id: req_e68558285ef44309a0c32736dd907d79
+      created: 1782591004000
+      modified: 1782591004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh riwayat pembayaran.
+
+
+        **Hak Akses :**
+
+
+        JWT (Admin only)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array pembayaran dengan metode & status.'
+      sortKey: -1782591004000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+- name: 16 - Actuator & Monitoring (Fase 3)
+  meta:
+    id: fld_f5daf77aa4104a51a4e27308065cf2f3
+    created: 1782592000000
+    modified: 1784833344753
+    sortKey: -1782590001025
+    description: Spring Boot Actuator endpoints untuk monitoring. Publik atau protected.
+  children:
+  - url: http://localhost:8080/actuator/api/health
+    name: Actuator Health
+    meta:
+      id: req_41d5daab1b51403f9a78ce3a33f484dc
+      created: 1782592001000
+      modified: 1782592001000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Cek status kesehatan aplikasi Spring Boot secara detail
+
+        (disk space, database connectivity, dll).
+
+
+        **Hak Akses :**
+
+
+        Publik (permitAll di SecurityConfig)
+
+
+        **Keterangan :**
+
+
+        Response 200: { status: UP, components: { db, diskSpace, ... } }.
+
+        Berbeda dengan /api/health yang custom — ini endpoint bawaan Actuator.'
+      sortKey: -1782592001000
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers: []
+  - url: http://localhost:8080/actuator/metrics
+    name: Actuator Metrics (list)
+    meta:
+      id: req_2b28a17c469d4b3684fba255b0897c90
+      created: 1782592002000
+      modified: 1782592002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan daftar semua metrik yang tersedia di Actuator.
+
+
+        **Hak Akses :**
+
+
+        Publik (atau protected, tergantung konfigurasi)
+
+
+        **Keterangan :**
+
+
+        Response 200: { names: ["jvm.memory.used", "http.server.requests", ...] }.
+
+        Kunjungi /actuator/metrics/{nama-metrik} untuk detail tiap metrik.'
+      sortKey: -1782592002000
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: http://localhost:8080/actuator/prometheus
+    name: Prometheus Metrics (scrape)
+    meta:
+      id: req_cb73b35635bf4103960e66b749dde3bd
+      created: 1782592003000
+      modified: 1782592003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Endpoint scraping Prometheus — berisi semua metrik dalam format
+
+        teks yang bisa dibaca Prometheus server.
+
+
+        **Hak Akses :**
+
+
+        Publik (permitAll) atau whitelist IP
+
+
+        **Keterangan :**
+
+
+        Format teks plain, bukan JSON. Prometheus server scrape endpoint
+
+        ini secara berkala (default tiap 15 detik di prometheus.yml).
+
+        Buka di browser untuk melihat raw metrics: jvm_*, http_*,
+
+        process_*, custom metrics screening, dll.'
+      sortKey: -1782592003000
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: http://localhost:8080/actuator/info
+    name: Actuator Info
+    meta:
+      id: req_23c0357a6c7e41169099f03f15bb8085
+      created: 1782592004000
+      modified: 1782592004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Informasi aplikasi (versi, nama, deskripsi) dari build info.
+
+
+        **Hak Akses :**
+
+
+        Publik
+
+
+        **Keterangan :**
+
+
+        Isi info bisa dikustomisasi via application.properties:
+
+        info.app.name, info.app.version, dll.'
+      sortKey: -1782592004000
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: http://localhost:9090
+    name: Prometheus UI (browser)
+    meta:
+      id: req_8540b194412a4c609a0bfc06a599ba4a
+      created: 1782592005000
+      modified: 1782592005000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Antarmuka web Prometheus untuk query & grafik metrik.
+
+
+        **Hak Akses :**
+
+
+        Lokal (tidak ada auth default)
+
+
+        **Keterangan :**
+
+
+        Buka di browser (bukan Insomnia). Coba query:
+
+        - http_server_requests_seconds_count (jumlah request)
+
+        - jvm_memory_used_bytes (penggunaan memori JVM)
+
+        - up (status scrape targets)
+
+        Hanya tersedia saat Docker Compose running (Prompt 3D).'
+      sortKey: -1782592005000
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: http://localhost:3000
+    name: Grafana Dashboard (browser)
+    meta:
+      id: req_e9fdcf5753ea4cf79541d4a1e9299fd6
+      created: 1782592006000
+      modified: 1782592006000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Antarmuka Grafana untuk dashboard monitoring visual.
+
+
+        **Hak Akses :**
+
+
+        admin/admin (default, ganti setelah pertama login)
+
+
+        **Keterangan :**
+
+
+        Buka di browser (bukan Insomnia). Login: admin/admin.
+
+        Import dashboard Spring Boot: Dashboards > Import > ID 4701
+
+        (JVM Micrometer dashboard dari grafana.com).
+
+        Hanya tersedia saat Docker Compose running (Prompt 3D).'
+      sortKey: -1782592006000
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_f48cdee3abfb467e8a89c3d4869603ae
+    created: 1782590000000
+    modified: 1782590000000
+environments:
+  name: Base Environment
+  meta:
+    id: env_ec3da810f8454421a7372ac448d0c1a7
+    created: 1782590000000
+    modified: 1782590000000
+    isPrivate: false
+  data:
+    base_url: http://localhost:8080/api
+    token: ''

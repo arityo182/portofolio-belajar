@@ -1,0 +1,2827 @@
+type: collection.insomnia.rest/5.0
+schema_version: '5.1'
+name: RS Medika Sentosa - Fase 1
+meta:
+  id: wrk_734b54308baa4c62a90bfefda81fdf7a
+  created: 1782367704121
+  modified: 1784833407096
+  description: ''
+collection:
+- url: http://localhost:8080/api/auth/register
+  name: Register
+  meta:
+    id: req_c84c3ec86edb4d1ab33536aca66a81a8
+    created: 1782367883315
+    modified: 1782367922919
+    isPrivate: false
+    description: ''
+    sortKey: -1782367883315
+  method: POST
+  body:
+    mimeType: application/json
+    text: "{\n  \"nama\": \"Ari Test\",\n  \"email\": \"ari@test.com\",\n  \"password\"\
+      : \"arie12345\"\n}"
+  headers:
+  - name: Content-Type
+    value: application/json
+  - name: User-Agent
+    value: insomnia/12.3.0
+    description: ''
+    disabled: false
+  - name: Origin
+    value: http://localhost:5173
+    description: CORS origin (frontend)
+    disabled: false
+  settings:
+    renderRequestBody: true
+    encodeUrl: true
+    followRedirects: global
+    cookies:
+      send: true
+      store: true
+    rebuildPath: true
+- url: '{{ _.base_url }}/api/health'
+  name: New Request
+  meta:
+    id: req_6346a4c4147249569119be61979a284b
+    created: 1782368077139
+    modified: 1782368080058
+    isPrivate: false
+    description: ''
+    sortKey: -1782368077139
+  method: GET
+  headers:
+  - name: Authorization
+    value: Bearer {{ _.token }}
+    disabled: false
+  - name: User-Agent
+    value: insomnia/12.3.0
+    description: ''
+    disabled: false
+  settings:
+    renderRequestBody: true
+    encodeUrl: true
+    followRedirects: global
+    cookies:
+      send: true
+      store: true
+    rebuildPath: true
+- url: '{{ _.base_url }}/api/health'
+  name: Health Check
+  meta:
+    id: req_eb5492a4987a419f9b6095ca09d6c486
+    created: 1782368077139
+    modified: 1782368080058
+    isPrivate: false
+    description: '**Description :**
+
+
+      Cek status backend (hidup/mati).
+
+
+      **Hak Akses :**
+
+
+      ALL (publik)
+
+
+      **Keterangan :**
+
+
+      Response 200: { status: "UP", service: ... }.'
+    sortKey: -1782368077139
+  method: GET
+  settings:
+    renderRequestBody: true
+    encodeUrl: true
+    followRedirects: global
+    cookies:
+      send: true
+      store: true
+    rebuildPath: true
+  headers: []
+- url: http://localhost:8080/api/auth/login
+  name: Login
+  meta:
+    id: req_a3549294180a4c42bdaf7573bf6dd74d
+    created: 1782368276426
+    modified: 1782368304577
+    isPrivate: false
+    description: ''
+    sortKey: -1782368276426
+  method: POST
+  body:
+    mimeType: application/json
+    text: "{\n  \"email\": \"ari@test.com\",\n  \"password\": \"arie12345\"\n}"
+  headers:
+  - name: Content-Type
+    value: application/json
+  - name: User-Agent
+    value: insomnia/12.3.0
+    description: ''
+    disabled: false
+  - name: Origin
+    value: http://localhost:5173
+    description: CORS origin (frontend)
+    disabled: false
+  settings:
+    renderRequestBody: true
+    encodeUrl: true
+    followRedirects: global
+    cookies:
+      send: true
+      store: true
+    rebuildPath: true
+- url: http://localhost:8080/api/screening/upload
+  name: Upload X-ray
+  meta:
+    id: req_ccd428af14074bd490c857356aa8edcb
+    created: 1782552398396
+    modified: 1782554009123
+    isPrivate: false
+    description: ''
+    sortKey: -1782552398396
+  method: POST
+  body:
+    mimeType: multipart/form-data
+    params:
+    - name: file
+      value: ''
+      description: ''
+      disabled: false
+      fileName: C:\Users\lenovo\Downloads\Dental Dataset\OS Collected Data\Osteoporosis\Osteoporosis
+        1.JPEG
+      type: file
+  headers:
+  - name: Authorization
+    value: Bearer {{ _.token }}
+    description: JWT token from login
+    disabled: false
+  - name: Content-Type
+    value: multipart/form-data
+  - name: Origin
+    value: http://localhost:5173
+    description: CORS origin (frontend)
+    disabled: false
+  authentication:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhcmlAdGVzdC5jb20iLCJpYXQiOjE3ODI1NTM5OTUsImV4cCI6MTc4MjY0MDM5NX0.P9a4z1Fa9_br2gILx1oKVdR4vLMUgjs-5xPCdcTyG04
+  settings:
+    renderRequestBody: true
+    encodeUrl: true
+    followRedirects: global
+    cookies:
+      send: true
+      store: true
+    rebuildPath: true
+- name: 0 - Auth
+  meta:
+    id: fld_0b741ec011d04b078c21d06093824046
+    created: 1782367704121
+    modified: 1782367704121
+    sortKey: -1782367900000
+    description: Registrasi & login pengguna. Endpoint publik.
+  children:
+  - url: '{{ _.base_url }}/api/auth/register'
+    name: Register (user utama)
+    meta:
+      id: req_5507e90f7b3b4f97a1dd0d67dc3b9e8d
+      created: 1782367883315
+      modified: 1782367922919
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk registrasi pengguna baru (role default PASIEN) sekaligus
+
+        memperoleh token JWT.
+
+
+        **Hak Akses :**
+
+
+        ALL (publik)
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | nama | mandatory |
+
+        | email | mandatory |
+
+        | password | mandatory |
+
+
+        **Keterangan :**
+
+
+        email harus unik, password minimal 6 karakter. Response 201:
+
+        { token, user }. Error 409: email sudah terdaftar.'
+      sortKey: -1782367883315
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"nama\": \"Ari Test\",\n  \"email\": \"ari@test.com\",\n  \"password\"\
+        : \"arie12345\"\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/auth/login'
+    name: Login (copy token ke Environment)
+    meta:
+      id: req_cdb3e6eefd6d40219075e38faf754fc3
+      created: 1782368276426
+      modified: 1782368304577
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk login dan memperoleh token JWT.
+
+
+        **Hak Akses :**
+
+
+        ALL (publik)
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | email | mandatory |
+
+        | password | mandatory |
+
+
+        **Keterangan :**
+
+
+        Response 200: { token, user }. Copy nilai `token`, paste ke
+
+        Environment > token. Error 404: email/password salah.'
+      sortKey: -1782368276426
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"email\": \"ari@test.com\",\n  \"password\": \"arie12345\"\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/auth/register'
+    name: Register (calon dokter)
+    meta:
+      id: req_e7d8e1fc1227402db7b8b8b145ac07a3
+      created: 1782368300000
+      modified: 1782368300000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Membuat user yang akan dijadikan DOKTER via modul Dokter.
+
+
+        **Hak Akses :**
+
+
+        ALL (publik)
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | nama | mandatory |
+
+        | email | mandatory |
+
+        | password | mandatory |
+
+
+        **Keterangan :**
+
+
+        Catat `id` user dari response, dipakai sebagai userId saat Create
+
+        Dokter. Role berubah jadi DOKTER saat didaftarkan.'
+      sortKey: -1782368300000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"nama\": \"Dr. Sari Wijaya\",\n  \"email\": \"sari@medika.com\"\
+        ,\n  \"password\": \"arie12345\"\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/auth/register'
+    name: Register (calon pasien)
+    meta:
+      id: req_c59bfe310965436fb912ceb07348ed4b
+      created: 1782368310000
+      modified: 1782368310000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Membuat user yang akan dilengkapi profil PASIEN via modul Pasien.
+
+
+        **Hak Akses :**
+
+
+        ALL (publik)
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | nama | mandatory |
+
+        | email | mandatory |
+
+        | password | mandatory |
+
+
+        **Keterangan :**
+
+
+        Catat `id` user dari response, dipakai sebagai userId saat Create
+
+        Pasien.'
+      sortKey: -1782368310000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"nama\": \"Budi Santoso\",\n  \"email\": \"budi@pasien.com\",\n\
+        \  \"password\": \"arie12345\"\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: Screening (Osteoporosis AI)
+  meta:
+    id: fld_2b9e38b6de0a41b6aab96aa8579f33db
+    created: 1782552398000
+    modified: 1782552398000
+    sortKey: -1782552398000
+    description: Skrining osteoporosis dari citra X-ray. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/screening/upload'
+    name: Upload X-ray
+    meta:
+      id: req_927d399f5999438bac2dc8130468cba9
+      created: 1782552398396
+      modified: 1782554009123
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk mengunggah citra X-ray dan memperoleh hasil skrining
+
+        osteoporosis (label, confidence, Grad-CAM, latensi). Backend
+
+        meneruskan ke FastAPI (model AI) lalu menyimpan hasil ke database.
+
+
+        **Hak Akses :**
+
+
+        JWT (user login)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (form-data) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | file | mandatory |
+
+
+        **Keterangan :**
+
+
+        file bertipe File (JPG/PNG, maks 10MB), key harus persis "file".
+
+        Jangan set Content-Type manual. Response 200:
+
+        { id, label, confidence, gradcamImage, latencyMs }.'
+      sortKey: -1782552398396
+    method: POST
+    body:
+      mimeType: multipart/form-data
+      params:
+      - name: file
+        value: ''
+        description: Citra X-ray (JPG/PNG). Tipe File.
+        disabled: false
+        fileName: C:\Users\lenovo\Downloads\Dental Dataset\OS Collected Data\Osteoporosis\Osteoporosis
+          1.JPEG
+        type: file
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+  - url: '{{ _.base_url }}/api/screening/history'
+    name: Get Riwayat Screening
+    meta:
+      id: req_6d45c2f474b5411a84d142eb17f5a5ca
+      created: 1782552400000
+      modified: 1782552400000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Mengambil riwayat skrining milik user yang sedang login.
+
+
+        **Hak Akses :**
+
+
+        JWT (user login)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array riwayat skrining, terbaru di atas.'
+      sortKey: -1782552400000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+- name: 1 - Poli (Tahap 2)
+  meta:
+    id: fld_4dba0b71b0424e89a3e0e38bb17e4daa
+    created: 1782560000000
+    modified: 1782560000000
+    sortKey: -1782560000000
+    description: CRUD master data poli. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/poli'
+    name: Create Poli
+    meta:
+      id: req_822feb39c94a43928fa0f15a8f68a343
+      created: 1782560001000
+      modified: 1782560001000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk menambah poli (poliklinik) baru.
+
+
+        **Hak Akses :**
+
+
+        JWT (idealnya Admin)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | nama | mandatory |
+
+        | deskripsi | optional |
+
+
+        **Keterangan :**
+
+
+        nama harus unik. Response 201:
+
+        { id, nama, deskripsi, isActive:true }. Error 409: nama sudah ada.'
+      sortKey: -1782560001000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"nama\": \"Poli Jantung\",\n  \"deskripsi\": \"Layanan kesehatan\
+        \ jantung\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/poli'
+    name: Get All Poli
+    meta:
+      id: req_23565317ac03412397e77ed9cdd1b527
+      created: 1782560002000
+      modified: 1782560002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh data poli.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array poli.'
+      sortKey: -1782560002000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/poli/1'
+    name: Get Poli by ID
+    meta:
+      id: req_244dc96084fa4fd38df623fd427b8728
+      created: 1782560003000
+      modified: 1782560003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan detail satu poli berdasarkan id.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id poli. Error 404 bila tidak ada.'
+      sortKey: -1782560003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/poli/1'
+    name: Update Poli
+    meta:
+      id: req_fbbffb20e0b94ceca3cbfc47428eceba
+      created: 1782560004000
+      modified: 1782560004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Mengubah data poli.
+
+
+        **Hak Akses :**
+
+
+        JWT (idealnya Admin)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | nama | mandatory |
+
+        | deskripsi | optional |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id poli.'
+      sortKey: -1782560004000
+    method: PUT
+    body:
+      mimeType: application/json
+      text: "{\n  \"nama\": \"Poli Jantung & Pembuluh Darah\",\n  \"deskripsi\": \"\
+        Layanan kardiovaskular\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/poli/1'
+    name: Deactivate Poli
+    meta:
+      id: req_ce55cd77574a4fd58c4eed49aa54fdf7
+      created: 1782560005000
+      modified: 1782560005000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menonaktifkan poli (soft delete, isActive menjadi false).
+
+
+        **Hak Akses :**
+
+
+        JWT (idealnya Admin)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id poli. Response 204: no content.'
+      sortKey: -1782560005000
+    method: DELETE
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+- name: 2 - Dokter (Tahap 2)
+  meta:
+    id: fld_791a53534fbf44e6ac2d4b134f7c01c9
+    created: 1782561000000
+    modified: 1782561000000
+    sortKey: -1782561000000
+    description: CRUD dokter. Prasyarat user & poli. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/dokter'
+    name: Create Dokter
+    meta:
+      id: req_c76b6c56853c4b74a7e521cfd91584d4
+      created: 1782561001000
+      modified: 1784138457134
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk mendaftarkan user sebagai dokter. Role user otomatis
+
+        berubah menjadi DOKTER.
+
+
+        **Hak Akses :**
+
+
+        JWT (idealnya Admin)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | userId | mandatory |
+
+        | poliId | mandatory |
+
+        | noStr | mandatory |
+
+        | spesialisasi | mandatory |
+
+        | noHp | optional |
+
+
+        **Keterangan :**
+
+
+        userId = id user calon dokter, poliId = id poli. Sesuaikan dengan
+
+        id asli di DB. Error 404: user/poli tidak ada.
+
+        Error 409: user sudah jadi dokter.'
+      sortKey: -1782561001000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"userId\": 2,\n  \"poliId\": 1,\n  \"noStr\": \"STR123456\",\n\
+        \  \"spesialisasi\": \"Spesialis Jantung\",\n  \"noHp\": \"081234567890\"\n\
+        }"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/dokter'
+    name: Get All Dokter
+    meta:
+      id: req_c9b8dd3a5be0467ca72a78253e017fa4
+      created: 1782561002000
+      modified: 1782561002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh data dokter.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array dokter (data flat: nama, email, namaPoli).'
+      sortKey: -1782561002000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/dokter/1'
+    name: Get Dokter by ID
+    meta:
+      id: req_7324c254c52a464185a3e4a0e9c193eb
+      created: 1782561003000
+      modified: 1782561003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan detail satu dokter berdasarkan id.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id dokter. Error 404 bila tidak ada.'
+      sortKey: -1782561003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/dokter/poli/1'
+    name: Get Dokter by Poli
+    meta:
+      id: req_56476c10fffc43eda394d3d628588037
+      created: 1782561004000
+      modified: 1782561004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan daftar dokter pada poli tertentu.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {poliId} pada URL diganti sesuai id poli. Response 200: array dokter.'
+      sortKey: -1782561004000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/dokter/1'
+    name: Update Dokter
+    meta:
+      id: req_b4084464c0bc49e6a569beb6dc734be5
+      created: 1782561005000
+      modified: 1782561005000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Mengubah data dokter.
+
+
+        **Hak Akses :**
+
+
+        JWT (idealnya Admin)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | userId | mandatory |
+
+        | poliId | mandatory |
+
+        | noStr | mandatory |
+
+        | spesialisasi | mandatory |
+
+        | noHp | optional |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id dokter.'
+      sortKey: -1782561005000
+    method: PUT
+    body:
+      mimeType: application/json
+      text: "{\n  \"userId\": 2,\n  \"poliId\": 1,\n  \"noStr\": \"STR123456\",\n\
+        \  \"spesialisasi\": \"Spesialis Jantung Anak\",\n  \"noHp\": \"081200000000\"\
+        \n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/dokter/1'
+    name: Delete Dokter
+    meta:
+      id: req_edb5fcccde554fb4a96a94b47cd3515e
+      created: 1782561006000
+      modified: 1782561006000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menghapus data dokter.
+
+
+        **Hak Akses :**
+
+
+        JWT (idealnya Admin)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id dokter. Response 204: no content.'
+      sortKey: -1782561006000
+    method: DELETE
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+- name: 3 - Jadwal Dokter (Tahap 2)
+  meta:
+    id: fld_8213c75ac35e49eba34449fc4bafb9bd
+    created: 1782562000000
+    modified: 1782562000000
+    sortKey: -1782562000000
+    description: CRUD jadwal praktik dokter. Prasyarat dokter. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/jadwal'
+    name: Create Jadwal
+    meta:
+      id: req_3ed7fe6b69264c6c9361e2fc8f78869c
+      created: 1782562001000
+      modified: 1782562001000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk menambah jadwal praktik dokter.
+
+
+        **Hak Akses :**
+
+
+        JWT (idealnya Admin/Dokter)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | dokterId | mandatory |
+
+        | hari | mandatory |
+
+        | jamMulai | mandatory |
+
+        | jamSelesai | mandatory |
+
+        | kuota | mandatory |
+
+
+        **Keterangan :**
+
+
+        hari == (SENIN, SELASA, RABU, KAMIS, JUMAT, SABTU, MINGGU).
+
+        jamMulai & jamSelesai format HH:mm. kuota minimal 1.
+
+        jamMulai harus sebelum jamSelesai. Error 404: dokter tidak ada.'
+      sortKey: -1782562001000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"dokterId\": 1,\n  \"hari\": \"SENIN\",\n  \"jamMulai\": \"08:00\"\
+        ,\n  \"jamSelesai\": \"12:00\",\n  \"kuota\": 20\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/jadwal'
+    name: Create Jadwal (invalid - test 400)
+    meta:
+      id: req_5c521804e60e4e499b2bb93aa061c63b
+      created: 1782562002000
+      modified: 1782562002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menguji validasi jam (jamSelesai lebih awal dari jamMulai).
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Keterangan :**
+
+
+        HARUS error 400 "Jam mulai harus sebelum jam selesai".'
+      sortKey: -1782562002000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"dokterId\": 1,\n  \"hari\": \"SELASA\",\n  \"jamMulai\": \"12:00\"\
+        ,\n  \"jamSelesai\": \"08:00\",\n  \"kuota\": 20\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/jadwal'
+    name: Get All Jadwal
+    meta:
+      id: req_834766882d6f4596aa575fd647198bcb
+      created: 1782562003000
+      modified: 1782562003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh jadwal.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array jadwal.'
+      sortKey: -1782562003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/jadwal/dokter/1'
+    name: Get Jadwal by Dokter
+    meta:
+      id: req_956e80657fe04c93a178e0c06ca4ed00
+      created: 1782562004000
+      modified: 1782562004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan jadwal aktif seorang dokter (dipakai saat booking).
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {dokterId} pada URL diganti sesuai id dokter.'
+      sortKey: -1782562004000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/jadwal/1'
+    name: Update Jadwal
+    meta:
+      id: req_4c8c381ae7ba4ef5afb0a2fa850bb59f
+      created: 1782562005000
+      modified: 1782562005000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Mengubah jadwal dokter.
+
+
+        **Hak Akses :**
+
+
+        JWT (idealnya Admin/Dokter)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | dokterId | mandatory |
+
+        | hari | mandatory |
+
+        | jamMulai | mandatory |
+
+        | jamSelesai | mandatory |
+
+        | kuota | mandatory |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id jadwal. Validasi jam berlaku.'
+      sortKey: -1782562005000
+    method: PUT
+    body:
+      mimeType: application/json
+      text: "{\n  \"dokterId\": 1,\n  \"hari\": \"SENIN\",\n  \"jamMulai\": \"09:00\"\
+        ,\n  \"jamSelesai\": \"13:00\",\n  \"kuota\": 15\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/jadwal/1'
+    name: Deactivate Jadwal
+    meta:
+      id: req_80a5c0679e344d3fa50e8c3f5595120c
+      created: 1782562006000
+      modified: 1782562006000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menonaktifkan jadwal (soft delete).
+
+
+        **Hak Akses :**
+
+
+        JWT (idealnya Admin/Dokter)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id jadwal. Response 204: no content.'
+      sortKey: -1782562006000
+    method: DELETE
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+- name: 4 - Pasien (Tahap 3)
+  meta:
+    id: fld_10a3bd53e0664870b66440c3d62d3a32
+    created: 1782563000000
+    modified: 1783882435776
+    sortKey: -1782562000175
+    description: CRUD profil pasien. Prasyarat user. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/pasien'
+    name: Create Pasien
+    meta:
+      id: req_5652342fb7a34c34ba869d8234bc8357
+      created: 1782563001000
+      modified: 1782563001000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk melengkapi profil pasien pada seorang user. Nomor rekam
+
+        medis digenerate otomatis oleh server.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | userId | mandatory |
+
+        | nik | mandatory |
+
+        | tanggalLahir | mandatory |
+
+        | jenisKelamin | mandatory |
+
+        | alamat | mandatory |
+
+        | noHp | optional |
+
+        | golDarah | optional |
+
+
+        **Keterangan :**
+
+
+        tanggalLahir format YYYY-MM-DD. jenisKelamin == (L, P).
+
+        noRekamMedis dibuat otomatis (mis. RM-2026-000001).
+
+        Error 404: user tidak ada. Error 409: user sudah jadi pasien.'
+      sortKey: -1782563001000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"userId\": 3,\n  \"nik\": \"3201234567890001\",\n  \"tanggalLahir\"\
+        : \"1995-05-20\",\n  \"jenisKelamin\": \"L\",\n  \"alamat\": \"Jl. Sehat No.\
+        \ 10, Jakarta\",\n  \"noHp\": \"081298765432\",\n  \"golDarah\": \"O\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/pasien'
+    name: Get All Pasien
+    meta:
+      id: req_e06be91e934a4ddb910f546b0ed04d85
+      created: 1782563002000
+      modified: 1782563002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh data pasien.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array pasien.'
+      sortKey: -1782563002000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/pasien/1'
+    name: Get Pasien by ID
+    meta:
+      id: req_3ce32ffd6e3f43318641c21e25aa0764
+      created: 1782563003000
+      modified: 1782563003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan detail satu pasien berdasarkan id.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id pasien. Error 404 bila tidak ada.'
+      sortKey: -1782563003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/pasien/1'
+    name: Update Pasien
+    meta:
+      id: req_f151d915ba9c43de8182318625c5fa69
+      created: 1782563004000
+      modified: 1782563004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Mengubah profil pasien.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | userId | mandatory |
+
+        | nik | mandatory |
+
+        | tanggalLahir | mandatory |
+
+        | jenisKelamin | mandatory |
+
+        | alamat | mandatory |
+
+        | noHp | optional |
+
+        | golDarah | optional |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id pasien.'
+      sortKey: -1782563004000
+    method: PUT
+    body:
+      mimeType: application/json
+      text: "{\n  \"userId\": 3,\n  \"nik\": \"3201234567890001\",\n  \"tanggalLahir\"\
+        : \"1995-05-20\",\n  \"jenisKelamin\": \"L\",\n  \"alamat\": \"Jl. Bahagia\
+        \ No. 5, Bandung\",\n  \"noHp\": \"081200001111\",\n  \"golDarah\": \"O\"\n\
+        }"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 5 - Appointment (Tahap 4)
+  meta:
+    id: fld_e69af76476294f55a7624fbee7b686c1
+    created: 1782570001000
+    modified: 1783882431298
+    sortKey: -1782562000150
+    description: Booking janji temu. Prasyarat pasien & jadwal. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/appointment'
+    name: Create Appointment (Booking)
+    meta:
+      id: req_ca954add53694fab8b78b3ae85934eef
+      created: 1782570002000
+      modified: 1782570002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk membuat booking janji temu. Sistem memvalidasi pasien,
+
+        jadwal aktif, kecocokan hari, double-booking, dan kuota.
+
+
+        **Hak Akses :**
+
+
+        JWT (Pasien)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | pasienId | mandatory |
+
+        | jadwalId | mandatory |
+
+        | tanggal | mandatory |
+
+        | keluhan | optional |
+
+
+        **Keterangan :**
+
+
+        tanggal format YYYY-MM-DD, tidak boleh masa lalu, dan HARUS jatuh
+
+        pada hari yang sama dengan jadwal (mis. jadwal SENIN -> tanggal harus
+
+        hari Senin). dokterId tidak perlu (diambil dari jadwal).
+
+        Error 404: pasien/jadwal tidak ada. Error 400: jadwal nonaktif /
+
+        hari tidak cocok / kuota penuh. Error 409: sudah booking jadwal+
+
+        tanggal yang sama.'
+      sortKey: -1782570002000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"pasienId\": 1,\n  \"jadwalId\": 1,\n  \"tanggal\": \"2026-07-20\"\
+        ,\n  \"keluhan\": \"Nyeri dada sejak 3 hari\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/appointment'
+    name: Get All Appointment
+    meta:
+      id: req_e7ea538e82b64d9894ed2b86745cd3e1
+      created: 1782570003000
+      modified: 1782570003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh appointment.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array appointment (flat dengan nama pasien, dokter, poli).'
+      sortKey: -1782570003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/appointment/1'
+    name: Get Appointment by ID
+    meta:
+      id: req_6bddd0912f824a0cb613759d8e8c1082
+      created: 1782570004000
+      modified: 1782570004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan detail satu appointment.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id appointment. Error 404 bila tidak ada.'
+      sortKey: -1782570004000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/appointment/pasien/1'
+    name: Get Appointment by Pasien
+    meta:
+      id: req_57687ba1a4e54ab794b86c276fdb5d1a
+      created: 1782570005000
+      modified: 1782570005000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan daftar appointment milik seorang pasien (riwayat booking).
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {pasienId} pada URL diganti sesuai id pasien.'
+      sortKey: -1782570005000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/appointment/1/status?status=DIPERIKSA'
+    name: Update Status Appointment
+    meta:
+      id: req_ab50198a65584013bd58b76138757bc1
+      created: 1782570006000
+      modified: 1782570006000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Mengubah status appointment (lifecycle pemeriksaan).
+
+
+        **Hak Akses :**
+
+
+        JWT (Dokter/Admin)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Query Param :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | status | mandatory |
+
+
+        **Keterangan :**
+
+
+        status == (MENUNGGU, DIPERIKSA, SELESAI, BATAL).
+
+        {id} pada URL diganti sesuai id appointment.'
+      sortKey: -1782570006000
+    method: PATCH
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+- name: 6 - Antrian (Tahap 4)
+  meta:
+    id: fld_e2165ca856894aae8a9cd7b514c24ce7
+    created: 1782571000000
+    modified: 1783882392639
+    sortKey: -1782562000100
+    description: Nomor antrian dari appointment. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/antrian/generate/1'
+    name: Generate Antrian
+    meta:
+      id: req_db3b20e3c63545139094f36f5056a23d
+      created: 1782571001000
+      modified: 1782571001000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk membuat nomor antrian dari sebuah appointment. Nomor urut
+
+        digenerate otomatis berdasarkan jadwal + tanggal appointment.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {appointmentId} pada URL diganti sesuai id appointment.
+
+        Error 404: appointment tidak ada. Error 409: antrian sudah dibuat.
+
+        Response 201: { id, appointmentId, nomorUrut, ... }.'
+      sortKey: -1782571001000
+    method: POST
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+  - url: '{{ _.base_url }}/api/antrian/appointment/1'
+    name: Get Antrian by Appointment
+    meta:
+      id: req_a2046f55c6ea45b5836b45f7e8204711
+      created: 1782571002000
+      modified: 1782571002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan nomor antrian dari suatu appointment.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {appointmentId} pada URL diganti sesuai id appointment.'
+      sortKey: -1782571002000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/antrian'
+    name: Get All Antrian
+    meta:
+      id: req_6fb7d3b8fc98473db4581ba827f2efb1
+      created: 1782571003000
+      modified: 1782571003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan seluruh antrian.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        Response 200: array antrian.'
+      sortKey: -1782571003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+- name: 7 - Rekam Medis (Tahap 5)
+  meta:
+    id: fld_4ebc244dd73d40b99cafc2c87fda0ac8
+    created: 1782572000000
+    modified: 1783882396515
+    sortKey: -1782562000200
+    description: Catatan medis hasil pemeriksaan. Prasyarat appointment. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/rekam-medis'
+    name: Create Rekam Medis
+    meta:
+      id: req_42665c28269743588249c2548b8f7307
+      created: 1782572001000
+      modified: 1782572001000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk mencatat rekam medis dari sebuah appointment. Pasien &
+
+        dokter diambil otomatis dari appointment.
+
+
+        **Hak Akses :**
+
+
+        JWT (Dokter)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | appointmentId | mandatory |
+
+        | diagnosa | mandatory |
+
+        | tindakan | optional |
+
+        | catatan | optional |
+
+
+        **Keterangan :**
+
+
+        Satu appointment hanya boleh punya satu rekam medis.
+
+        Error 404: appointment tidak ada. Error 409: rekam medis sudah ada.
+
+        Opsional: status appointment berubah jadi SELESAI.'
+      sortKey: -1782572001000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"appointmentId\": 1,\n  \"diagnosa\": \"Hipertensi grade 1\",\n\
+        \  \"tindakan\": \"Pemberian obat antihipertensi\",\n  \"catatan\": \"Kontrol\
+        \ 2 minggu lagi\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/rekam-medis/1'
+    name: Get Rekam Medis by ID
+    meta:
+      id: req_3fb57879f576400d9ee86168a44c8a16
+      created: 1782572002000
+      modified: 1782572002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan detail satu rekam medis.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id rekam medis.'
+      sortKey: -1782572002000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/rekam-medis/pasien/1'
+    name: Get Rekam Medis by Pasien
+    meta:
+      id: req_278421f1ce57484e99d8d1e4e9851f8d
+      created: 1782572003000
+      modified: 1782572003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan riwayat rekam medis seorang pasien.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {pasienId} pada URL diganti sesuai id pasien.'
+      sortKey: -1782572003000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/rekam-medis/appointment/1'
+    name: Get Rekam Medis by Appointment
+    meta:
+      id: req_d8fcecef60e840eb9b74bdc339fd5aa0
+      created: 1782572004000
+      modified: 1782572004000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan rekam medis dari suatu appointment.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {appointmentId} pada URL diganti sesuai id appointment.'
+      sortKey: -1782572004000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+- name: 8 - Resep (Tahap 5)
+  meta:
+    id: fld_1861dcffee05481d811a7bb6b2bf5a8e
+    created: 1782573000000
+    modified: 1783882399543
+    sortKey: -1782562000300
+    description: Resep obat dari rekam medis. Prasyarat rekam medis. Butuh JWT.
+  children:
+  - url: '{{ _.base_url }}/api/resep'
+    name: Create Resep
+    meta:
+      id: req_b23cc444b3b4461ca55e1f655e72d82a
+      created: 1782573001000
+      modified: 1782573001000
+      isPrivate: false
+      description: '**Description :**
+
+
+        API untuk menambah resep obat pada sebuah rekam medis.
+
+
+        **Hak Akses :**
+
+
+        JWT (Dokter)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Request Body (JSON Format) :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | rekamMedisId | mandatory |
+
+        | namaObat | mandatory |
+
+        | dosis | mandatory |
+
+        | jumlah | mandatory |
+
+        | aturanPakai | optional |
+
+
+        **Keterangan :**
+
+
+        Master data obat adalah Fase 2, jadi namaObat masih berupa teks bebas.
+
+        Error 404: rekam medis tidak ada.'
+      sortKey: -1782573001000
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"rekamMedisId\": 1,\n  \"namaObat\": \"Amlodipine 5mg\",\n  \"\
+        dosis\": \"1x1 tablet\",\n  \"jumlah\": 30,\n  \"aturanPakai\": \"Diminum\
+        \ pagi hari sesudah makan\"\n}"
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/api/resep/rekam-medis/1'
+    name: Get Resep by Rekam Medis
+    meta:
+      id: req_4de59489d92c4ee887c76a13748e9348
+      created: 1782573002000
+      modified: 1782573002000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menampilkan daftar resep pada sebuah rekam medis.
+
+
+        **Hak Akses :**
+
+
+        JWT
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {rekamMedisId} pada URL diganti sesuai id rekam medis.'
+      sortKey: -1782573002000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+  - url: '{{ _.base_url }}/api/resep/1'
+    name: Delete Resep
+    meta:
+      id: req_922f249d5d694d64b0b4ee4080680114
+      created: 1782573003000
+      modified: 1782573003000
+      isPrivate: false
+      description: '**Description :**
+
+
+        Menghapus satu resep.
+
+
+        **Hak Akses :**
+
+
+        JWT (Dokter)
+
+
+        **Request :**
+
+
+        | Key | Status |
+
+        | --- | --- |
+
+        | Authorization | Bearer (jwt key) |
+
+
+        **Keterangan :**
+
+
+        {id} pada URL diganti sesuai id resep. Response 204: no content.'
+      sortKey: -1782573003000
+    method: DELETE
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    headers:
+    - name: Authorization
+      value: Bearer {{ _.token }}
+      disabled: false
+    - name: Origin
+      value: http://localhost:5173
+      description: CORS origin (frontend)
+      disabled: false
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_f19444c1c31930d006198e0405da6b3272bd5315
+    created: 1782367704130
+    modified: 1782367704130
+environments:
+  name: Base Environment
+  meta:
+    id: env_f19444c1c31930d006198e0405da6b3272bd5315
+    created: 1782367704126
+    modified: 1782367704126
+    isPrivate: false

@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    /* Bahasa & library target (modern, sesuai Vite + React 19) */
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
+    /* Module resolution ala bundler (Vite) */
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Type-check only, tanpa emit (Vite/esbuild yang meng-emit) */
+    "noEmit": true,
+    "skipLibCheck": true,
+
+    /* JSX React 17+ automatic runtime */
+    "jsx": "react-jsx",
+
+    /* Linting tipe */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"]
+}
