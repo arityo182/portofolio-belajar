@@ -1,0 +1,19 @@
+# ============================================
+# BASE IMAGE: npm Dependencies Only
+# ============================================
+# Dibangun dengan:
+#   docker build -f Dockerfile.deps -t medika-frontend-deps:latest .
+# ============================================
+FROM node:24-alpine
+
+WORKDIR /app
+
+# Salin package.json & lock file
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm install
+
+LABEL type="base-deps" \
+      service="medika-frontend" \
+      description="Base image with all npm dependencies pre-downloaded"

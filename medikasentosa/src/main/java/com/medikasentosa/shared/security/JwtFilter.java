@@ -39,20 +39,25 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        final String token = authHeader.substring(7); // buang "Bearer "
-        final String email = jwtService.extractEmail(token);
+        try {
+            final String token = authHeader.substring(7); // buang "Bearer "
+            final String email = jwtService.extractEmail(token);
 
-        // kalau ada email & belum ter-authenticate di request ini
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            // kalau ada email & belum ter-authenticate di request ini
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-            if (jwtService.isTokenValid(token, userDetails)) {
-                // tandai user sebagai "sudah login" untuk request ini
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (jwtService.isTokenValid(token, userDetails)) {
+                    // tandai user sebagai "sudah login" untuk request ini
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (Exception e) {
+            // Token invalid/expired/tampered — biarkan tanpa authentication
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

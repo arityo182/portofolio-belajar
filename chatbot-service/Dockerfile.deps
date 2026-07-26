@@ -1,0 +1,24 @@
+# ============================================
+# BASE IMAGE: Python pip Dependencies Only
+# ============================================
+# Dibangun dengan:
+#   docker build -f Dockerfile.deps -t medika-chatbot-deps:latest .
+# ============================================
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# System dependencies
+RUN apt-get update -qq && \
+    apt-get install -y -qq --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Salin requirements
+COPY requirements.txt ./
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+LABEL type="base-deps" \
+      service="medika-chatbot" \
+      description="Base image with all pip dependencies pre-downloaded"

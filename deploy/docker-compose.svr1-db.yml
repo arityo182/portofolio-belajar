@@ -1,0 +1,42 @@
+# ============================================
+# SERVER 1 — Database + Cache
+# IP: 10.0.1.10 (contoh)
+# ============================================
+services:
+  postgres:
+    image: postgres:16-alpine
+    pull_policy: missing
+    container_name: prod-postgres
+    restart: always
+    ports:
+      - "0.0.0.0:5432:5432"
+    environment:
+      POSTGRES_DB: medika_sentosa
+      POSTGRES_USER: core
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U core -d medika_sentosa"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    pull_policy: missing
+    container_name: prod-redis
+    restart: always
+    ports:
+      - "0.0.0.0:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

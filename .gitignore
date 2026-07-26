@@ -60,8 +60,19 @@ docker-volumes/
 # Offline packages (dari disasterwatch script)
 offline-packages/
 
+# Docker offline cache (download-deps.sh)
+docker-offline/
+$HOME/docker-offline/
+
 # Backup files
 *.bak
 *.backup
 *.tar
 *.tar.gz
+
+# ============================================
+# Chatbot Service
+# ============================================
+chatbot-service/chroma_db/
+chatbot-service/__pycache__/
+chatbot-service/**/__pycache__/

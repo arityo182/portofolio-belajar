@@ -48,7 +48,7 @@ function formatJam(waktu: string): string {
  */
 export default function JadwalList({ jadwal }: JadwalListProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-4 grid-cols-1">
       {jadwal.map((j) => (
         <div
           key={j.id}

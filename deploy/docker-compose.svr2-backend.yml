@@ -1,0 +1,30 @@
+# ============================================
+# SERVER 2 — Backend Spring Boot
+# IP: 10.0.1.20 (contoh)
+# ============================================
+services:
+  backend:
+    build:
+      context: ../medikasentosa
+      dockerfile: Dockerfile
+      pull: false
+    container_name: prod-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://10.0.1.10:5432/medika_sentosa
+      SPRING_DATASOURCE_USERNAME: core
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATA_REDIS_HOST: 10.0.1.10
+      SPRING_DATA_REDIS_PORT: 6379
+      APP_FASTAPI_URL: http://10.0.1.30:8001
+      APP_CHATBOT_URL: http://10.0.1.30:8002
+      SPRING_CACHE_TYPE: simple
+    depends_on: []
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8080/swagger-ui/index.html || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 90s

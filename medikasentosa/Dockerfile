@@ -1,23 +1,20 @@
 # ============================================
 # BACKEND — Spring Boot 4.1.0 + Java 21
-# Multi-stage: Gradle build → JRE runtime
+# ============================================
+# OFFLINE: FROM medika-backend-deps (deps udah di-image)
+# Ganti source code? Rebuild TANPA internet
+# Nambah library? Rebuild Dockerfile.deps dulu
 # ============================================
 
-# Stage 1: Build dengan Gradle
-FROM gradle:8-jdk21-alpine AS builder
+FROM medika-backend-deps:latest AS builder
 WORKDIR /app
-
-# Salin Gradle wrapper & config dulu (cache layer)
-COPY build.gradle settings.gradle gradlew ./
-COPY gradle gradle
-
-# Download dependencies (cache layer)
-RUN ./gradlew dependencies --no-daemon -q || true
+# build.gradle, settings.gradle, gradlew, gradle/ SUDAH ADA
+# ~/.gradle/caches/ SUDAH TERISI dependencies
 
 # Salin source code
 COPY src src
 
-# Build JAR (skip test)
+# Build JAR — zero download
 RUN ./gradlew build -x test --no-daemon
 
 # ============================================
@@ -34,6 +31,11 @@ RUN cp /app/libs/*.jar /app/app.jar 2>/dev/null; \
     JAR=$(ls /app/libs/*.jar | grep -v plain | head -1); \
     [ -n "$JAR" ] && cp "$JAR" /app/app.jar; \
     rm -rf /app/libs
+
+# Non-root user (security best practice)
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup && \
+    chown -R appuser:appgroup /app
+USER appuser
 
 # Health check
 HEALTHCHECK --interval=10s --timeout=5s --retries=5 \

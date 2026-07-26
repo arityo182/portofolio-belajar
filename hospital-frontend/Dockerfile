@@ -1,20 +1,18 @@
 # ============================================
 # FRONTEND — React 19 + Vite 8 + Nginx
-# Multi-stage: Node build → Nginx serve
+# ============================================
+# OFFLINE: FROM medika-frontend-deps (deps udah di-image)
 # ============================================
 
-# Stage 1: Build dengan Node
-FROM node:24-alpine AS builder
+FROM medika-frontend-deps:latest AS builder
 WORKDIR /app
-
-# Salin package.json & lock dulu (cache layer)
-COPY package.json package-lock.json ./
-RUN npm install
+# package.json + node_modules SUDAH ADA
+# npm packages SUDAH TERINSTALL
 
 # Salin source code
 COPY . .
 
-# Build static files
+# Build — zero download
 RUN npm run build
 
 # ============================================

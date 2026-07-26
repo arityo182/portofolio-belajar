@@ -1,0 +1,15 @@
+# ============================================
+# SERVER 3 — Frontend Nginx
+# IP: 10.0.1.25 (contoh)
+# ============================================
+services:
+  frontend:
+    build:
+      context: ../hospital-frontend
+      dockerfile: Dockerfile
+      pull: false
+    container_name: prod-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on: []

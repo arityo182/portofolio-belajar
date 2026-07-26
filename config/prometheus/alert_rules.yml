@@ -1,0 +1,63 @@
+# ============================================
+# PROMETHEUS ALERT RULES — RS Medika Sentosa
+# ============================================
+groups:
+  - name: medika_alerts
+    rules:
+      # ── Server alerts ──────────────────────
+      - alert: HighCPUUsage
+        expr: avg(rate(process_cpu_usage[5m])) * 100 > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU usage > 80%"
+          description: "Server {{ $labels.instance }} CPU {{ $value }}%"
+
+      - alert: HighMemoryUsage
+        expr: jvm_memory_used_bytes / jvm_memory_max_bytes > 0.9
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory usage > 90%"
+          description: "JVM memory {{ $value | humanizePercentage }}"
+
+      # ── API alerts ─────────────────────────
+      - alert: HighErrorRate
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High 5xx error rate"
+          description: "{{ $value }} errors/sec di endpoint {{ $labels.uri }}"
+
+      - alert: SlowResponses
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow API responses"
+          description: "P95 latency {{ $value }}s di {{ $labels.uri }}"
+
+      # ── Database alerts ────────────────────
+      - alert: DatabaseConnectionsHigh
+        expr: hikaricp_connections_active / hikaricp_connections_max > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "DB connection pool > 80%"
+          description: "{{ $value | humanizePercentage }} pool connections active"
+
+      # ── Service health ─────────────────────
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} DOWN"
+          description: "Service {{ $labels.job }} tidak merespon > 1 menit"

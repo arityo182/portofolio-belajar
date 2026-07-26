@@ -1,0 +1,26 @@
+# ============================================
+# BASE IMAGE: Gradle Dependencies Only
+# ============================================
+# Dibangun dengan:
+#   docker build -f Dockerfile.deps -t medika-backend-deps:latest .
+#
+# Setelah dibangun, main Dockerfile bisa
+# menggunakan FROM medika-backend-deps
+# sehingga build berikutnya TANPA internet
+# ============================================
+FROM gradle:8-jdk21-alpine
+
+WORKDIR /app
+
+# Salin file konfigurasi dependency
+COPY build.gradle settings.gradle gradlew ./
+COPY gradle gradle
+
+# Download semua dependencies — jalankan SEKALI
+RUN ./gradlew dependencies --no-daemon -q || true
+
+# Label untuk identifikasi
+LABEL type="base-deps" \
+      service="medika-backend" \
+      keep="true" \
+      description="Base image with all Gradle dependencies pre-downloaded"

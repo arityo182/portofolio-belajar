@@ -1,0 +1,60 @@
+# ============================================
+# .dockerignore — RS Medika Sentosa
+# Perkecil build context biar docker build cepet
+# ============================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# Docker
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# Setup scripts
+setup.sh
+*.sh
+
+# Node
+**/node_modules/
+**/dist/
+**/.vite/
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/venv/
+**/.venv/
+
+# Java
+**/.gradle/
+**/build/
+**/bin/
+**/out/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github/
+
+# Documentation
+*.md
+deploy/
+
+# Test files
+**/Insomnia_*.yaml

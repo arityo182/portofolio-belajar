@@ -1,0 +1,21 @@
+# ============================================
+# CHATBOT SERVICE — FastAPI + Ollama + RAG
+# ============================================
+# OFFLINE: FROM medika-chatbot-deps (deps udah di-image)
+# ============================================
+
+FROM medika-chatbot-deps:latest
+WORKDIR /app
+# Python + pip packages SUDAH TERINSTALL
+
+COPY . .
+
+# Non-root user
+RUN adduser --disabled-password --gecos "" botuser && \
+    chown -R botuser:botuser /app
+USER botuser
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhost:8002/chat/health || exit 1
+
+EXPOSE 8002
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002"]

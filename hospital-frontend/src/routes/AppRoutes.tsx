@@ -5,12 +5,14 @@ import AdminRoute from "./AdminRoute";
 import AdminLayout from "../components/admin/AdminLayout";
 import DokterRoute from "./DokterRoute";
 import DokterLayout from "../components/dokter/DokterLayout";
-import Home from "../pages/Home";
+import Home from "../pages/Home"
+import NotFound from "../pages/NotFound";
 import Layanan from "../pages/Layanan";
 import Kontak from "../pages/Kontak";
 import TentangKami from "../pages/TentangKami";
 import Radiologi from "../features/screening/pages/Radiologi";
 import OsteoScreening from "../features/screening/pages/OsteoScreening";
+import RiwayatSkrining from "../features/screening/pages/RiwayatSkrining";
 import JadwalPraktik from "../features/jadwal/pages/JadwalPraktik";
 import BookingPage from "../features/appointment/pages/BookingPage";
 import AppointmentSayaPage from "../features/appointment/pages/AppointmentSayaPage";
@@ -32,6 +34,7 @@ import AdminContent from "../features/admin/pages/AdminContent";
 import AdminBilling from "../features/billing/pages/AdminBilling";
 import TagihanSaya from "../features/billing/pages/TagihanSaya";
 import BayarTagihan from "../features/pembayaran/pages/BayarTagihan";
+import ChatPage from "../features/chat/pages/ChatPage";
 import DokterAntrian from "../features/dokterpanel/pages/DokterAntrian";
 import DokterRekamMedis from "../features/dokterpanel/pages/DokterRekamMedis";
 import Login from "../features/auth/pages/Login";
@@ -57,12 +60,14 @@ export default function AppRoutes() {
           {/* Butuh login (JWT) */}
           <Route element={<ProtectedRoute />}>
             <Route path="/osteoporosis/unggah" element={<OsteoScreening />} />
+            <Route path="/osteoporosis/riwayat" element={<RiwayatSkrining />} />
             <Route path="/booking" element={<BookingPage />} />
             <Route path="/appointment-saya" element={<AppointmentSayaPage />} />
             <Route path="/profil-pasien" element={<ProfilPasienPage />} />
             <Route path="/rekam-medis" element={<RiwayatRekamMedisPage />} />
             <Route path="/tagihan-saya" element={<TagihanSaya />} />
             <Route path="/bayar-tagihan" element={<BayarTagihan />} />
+            <Route path="/chat" element={<ChatPage />} />
           </Route>
         </Route>
 
@@ -90,10 +95,15 @@ export default function AppRoutes() {
         <Route element={<DokterRoute />}>
           <Route element={<DokterLayout />}>
             <Route path="/dokter-panel/antrian" element={<DokterAntrian />} />
-            <Route path="/dokter-panel/rekam-medis" element={<DokterRekamMedis />} />
+          <Route path="/dokter-panel/rekam-medis" element={<DokterRekamMedis />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
+
+          {/* 404 — Catch-all */}
+          <Route path="*" element={<Layout />}>
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
     </BrowserRouter>
   );
 }

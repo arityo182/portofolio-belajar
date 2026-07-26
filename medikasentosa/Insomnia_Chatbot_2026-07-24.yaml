@@ -1,0 +1,251 @@
+type: collection.insomnia.rest/5.0
+schema_version: '5.1'
+name: RS Medika Sentosa — Chatbot Senta
+meta:
+  id: wrk_senta_chatbot_test
+  created: 1784833000000
+  modified: 1784833000000
+  description: Test endpoint chatbot Senta (FastAPI port 8002) + Spring Boot Chat API
+collection:
+  # ═══════════════════════════════════════════════
+  # Chatbot Service (direct — port 8002)
+  # ═══════════════════════════════════════════════
+  - name: Chatbot Service (Direct :8002)
+    meta:
+      id: fld_chatbot_direct
+      description: Test langsung ke FastAPI chatbot service
+    children:
+      - url: '{{ _.base_url }}/chat/health'
+        name: Health Check
+        meta:
+          id: req_chat_health
+          description: |-
+            **Expected:** 200
+            ```json
+            { "status": "UP", "model": "qwen2.5:14b", "ollama_reachable": true }
+            ```
+        method: GET
+        headers:
+          - name: Content-Type
+            value: application/json
+
+      - url: '{{ _.base_url }}/chat/message'
+        name: Chat — Sakit Kepala
+        meta:
+          id: req_chat_headache
+          description: |-
+            **Expected:** 200, Senta merekomendasikan Poli Saraf/Umum
+            
+            **Context:** Poli Umum + Poli Saraf + dr. Sari (Neurologi)
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "message": "Poli apa yang tersedia untuk sakit kepala?",
+              "sessionHistory": [],
+              "context": {
+                "poli": [
+                  {"id": 1, "nama": "Poli Umum", "deskripsi": "Pelayanan kesehatan umum dan pemeriksaan dasar"},
+                  {"id": 2, "nama": "Poli Saraf", "deskripsi": "Spesialisasi gangguan neurologis"}
+                ],
+                "dokter": [
+                  {"id": 1, "nama": "dr. Sari Wijaya", "spesialisasi": "Neurologi", "namaPoli": "Poli Saraf"}
+                ],
+                "jadwal": [],
+                "rekamMedisAktif": null
+              },
+              "stream": false
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+
+      - url: '{{ _.base_url }}/chat/message'
+        name: Chat — Nyeri Dada
+        meta:
+          id: req_chat_chestpain
+          description: |-
+            **Expected:** 200, Senta merekomendasikan Poli Jantung
+            
+            **Context:** 5 poli + 7 dokter
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "message": "Saya sering nyeri dada sebelah kiri, poli apa yang harus saya kunjungi?",
+              "sessionHistory": [],
+              "context": {
+                "poli": [
+                  {"id": 1, "nama": "Poli Umum", "deskripsi": "Pelayanan kesehatan umum"},
+                  {"id": 2, "nama": "Poli Jantung", "deskripsi": "Diagnosis dan pengobatan penyakit kardiovaskular"},
+                  {"id": 3, "nama": "Poli Tulang & Ortopedi", "deskripsi": "Gangguan tulang, sendi, dan otot"},
+                  {"id": 4, "nama": "Poli Penyakit Dalam", "deskripsi": "Diagnosis lanjutan penyakit organ dalam"},
+                  {"id": 5, "nama": "Poli Anak", "deskripsi": "Pelayanan kesehatan anak 0-18 tahun"}
+                ],
+                "dokter": [
+                  {"id": 1, "nama": "dr. Ahmad Fauzi", "spesialisasi": "Dokter Umum", "namaPoli": "Poli Umum"},
+                  {"id": 2, "nama": "dr. Sari Wijaya", "spesialisasi": "Dokter Umum", "namaPoli": "Poli Umum"},
+                  {"id": 3, "nama": "dr. Budi Hartono", "spesialisasi": "Spesialis Jantung", "namaPoli": "Poli Jantung"}
+                ],
+                "jadwal": [
+                  {"id": 5, "namaDokter": "dr. Budi Hartono", "hari": "SENIN", "jamMulai": "09:00", "jamSelesai": "13:00", "kuota": 10},
+                  {"id": 6, "namaDokter": "dr. Budi Hartono", "hari": "JUMAT", "jamMulai": "14:00", "jamSelesai": "18:00", "kuota": 10}
+                ],
+                "rekamMedisAktif": null
+              },
+              "stream": false
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+
+      - url: '{{ _.base_url }}/chat/message'
+        name: Chat — Dengan History
+        meta:
+          id: req_chat_history
+          description: |-
+            **Expected:** 200, Senta melanjutkan percakapan dengan konteks history
+            
+            Simulasikan percakapan lanjutan dengan 2 pesan sebelumnya
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "message": "Berapa biaya konsultasi di poli itu?",
+              "sessionHistory": [
+                {"role": "user", "content": "Saya sering nyeri dada sebelah kiri"},
+                {"role": "assistant", "content": "Untuk keluhan nyeri dada, saya sarankan Anda mengunjungi Poli Jantung. Di sana ada dr. Budi Hartono, Spesialis Jantung yang tersedia di hari Senin dan Jumat."}
+              ],
+              "context": {
+                "poli": [{"id": 2, "nama": "Poli Jantung", "deskripsi": "Diagnosis dan pengobatan penyakit kardiovaskular"}],
+                "dokter": [],
+                "jadwal": [],
+                "rekamMedisAktif": null
+              },
+              "stream": false
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+
+      - url: '{{ _.base_url }}/chat/message'
+        name: Chat — Empty Message (400)
+        meta:
+          id: req_chat_empty
+          description: '**Expected:** 400 — pesan tidak boleh kosong'
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "message": "",
+              "sessionHistory": [],
+              "context": { "poli": [], "dokter": [], "jadwal": [], "rekamMedisAktif": null },
+              "stream": false
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+
+  # ═══════════════════════════════════════════════
+  # Spring Boot Chat API (via backend :8080)
+  # ═══════════════════════════════════════════════
+  - name: Spring Boot Chat API (via :8080)
+    meta:
+      id: fld_spring_chat
+      description: Test endpoint chat via backend Spring Boot (butuh JWT token)
+    children:
+      - url: '{{ _.base_url }}/api/chat/message'
+        name: Send Message (new session)
+        meta:
+          id: req_spring_chat_new
+          description: |-
+            **Auth:** Bearer {{ _.token }}
+            **Expected:** 200, ChatMessageResponse
+            
+            sessionId = null → backend buat sesi baru
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "message": "Poli apa yang cocok untuk sakit kepala?",
+              "sessionId": null
+            }
+        headers:
+          - name: Authorization
+            value: 'Bearer {{ _.token }}'
+          - name: Content-Type
+            value: application/json
+          - name: Origin
+            value: http://localhost:5173
+
+      - url: '{{ _.base_url }}/api/chat/message'
+        name: Send Message (lanjut session)
+        meta:
+          id: req_spring_chat_continue
+          description: |-
+            **Auth:** Bearer {{ _.token }}
+            **Expected:** 200 — lanjut percakapan di sesi yang sama
+            
+            Isi sessionId dari response request sebelumnya
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "message": "Dokter siapa yang tersedia di poli itu?",
+              "sessionId": 1
+            }
+        headers:
+          - name: Authorization
+            value: 'Bearer {{ _.token }}'
+          - name: Content-Type
+            value: application/json
+          - name: Origin
+            value: http://localhost:5173
+
+      - url: '{{ _.base_url }}/api/chat/sessions'
+        name: Get Sessions
+        meta:
+          id: req_spring_sessions
+          description: |-
+            **Auth:** Bearer {{ _.token }}
+            **Expected:** 200, array ChatSession
+        method: GET
+        headers:
+          - name: Authorization
+            value: 'Bearer {{ _.token }}'
+          - name: Origin
+            value: http://localhost:5173
+
+      - url: '{{ _.base_url }}/api/chat/sessions/1/messages'
+        name: Get Session History
+        meta:
+          id: req_spring_history
+          description: |-
+            **Auth:** Bearer {{ _.token }}
+            **Expected:** 200, ChatHistoryResponse { session, messages[] }
+        method: GET
+        headers:
+          - name: Authorization
+            value: 'Bearer {{ _.token }}'
+          - name: Origin
+            value: http://localhost:5173
+
+      - url: '{{ _.base_url }}/api/chat/sessions/1'
+        name: Delete Session
+        meta:
+          id: req_spring_delete
+          description: |-
+            **Auth:** Bearer {{ _.token }}
+            **Expected:** 204 No Content
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: 'Bearer {{ _.token }}'
+          - name: Origin
+            value: http://localhost:5173

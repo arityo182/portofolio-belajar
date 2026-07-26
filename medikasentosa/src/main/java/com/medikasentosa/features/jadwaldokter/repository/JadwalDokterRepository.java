@@ -12,4 +12,6 @@ public interface JadwalDokterRepository extends JpaRepository<JadwalDokter, Long
     List<JadwalDokter> findByDokter(Dokter dokter);
 
     List<JadwalDokter> findByDokterAndIsActiveTrue(Dokter dokter);
+
+    List<JadwalDokter> findByIsActiveTrue();
 }

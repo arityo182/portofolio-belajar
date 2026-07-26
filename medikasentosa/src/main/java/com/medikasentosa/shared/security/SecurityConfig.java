@@ -43,10 +43,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/dokter", "/api/dokter/poli/**").permitAll() // dokter publik
                         .requestMatchers("/api/content/**").permitAll() // konten halaman publik
                         .requestMatchers("/api/jadwal/dokter/**").permitAll() // jadwal dokter publik
+                        .requestMatchers("/api/chat/public/**").permitAll() // chat publik tanpa login
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll() // dokumentasi
-                                                                                                               // Swagger
-                                                                                                               // tanpa
-                                                                                                               // login
+                                                                                                                // Swagger
+                                                                                                                // tanpa
+                                                                                                                // login
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // endpoint admin butuh role ADMIN
                         .requestMatchers("/actuator/health", "/actuator/prometheus").permitAll() // Prometheus scrape
                         .requestMatchers("/actuator/**").hasRole("ADMIN") // actuator lainnya admin only

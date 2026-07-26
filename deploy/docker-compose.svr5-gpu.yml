@@ -1,0 +1,33 @@
+# ============================================
+# SERVER 5 — GPU Server (Ollama)
+# IP: 10.0.1.40 (contoh)
+# ============================================
+# Ini bukan Docker, tapi bare-metal Ollama di server GPU
+# ============================================
+
+# Setup:
+#   curl -fsSL https://ollama.com/install.sh | sh
+#   ollama pull qwen2.5:14b
+#   ollama serve    (jalan di port 11434)
+
+# Kalo mau di Docker:
+# services:
+#   ollama:
+#     image: ollama/ollama:latest
+#     container_name: prod-ollama
+#     restart: always
+#     ports:
+#       - "0.0.0.0:11434:11434"
+#     volumes:
+#       - ollama_data:/root/.ollama
+#     deploy:
+#       resources:
+#         reservations:
+#           devices:
+#             - driver: nvidia
+#               count: 1
+#               capabilities: [gpu]
+#     runtime: nvidia
+#
+# volumes:
+#   ollama_data:
