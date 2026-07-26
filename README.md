@@ -1,16 +1,15 @@
 # RS Medika Sentosa — Hospital Enterprise Web Application
 
 [![CI](https://github.com/arityo182/portofolio-belajar/actions/workflows/ci.yml/badge.svg)](https://github.com/arityo182/portofolio-belajar/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-119%20passed-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-22%20files%20passed-brightgreen)]()
 [![Java](https://img.shields.io/badge/java-21-blue)]()
 [![Spring Boot](https://img.shields.io/badge/spring--boot-4.1.0-green)]()
 [![React](https://img.shields.io/badge/react-19-61dafb)]()
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED)]()
+[![Prometheus](https://img.shields.io/badge/monitoring-active-orange)]()
+[![K8s](https://img.shields.io/badge/k8s-ready-326CE5)]()
 
-Sistem informasi rumah sakit full-stack yang mengintegrasikan layanan administratif (pendaftaran pasien, janji temu, rekam medis) dengan fitur unggulan skrining osteoporosis berbasis kecerdasan buatan. Dibangun sebagai proyek tugas akhir sekaligus portofolio untuk lamaran magang dan CPNS, mengikuti standar ISO/IEC/IEEE 29148:2018 untuk requirements engineering.
-
-Mengintegrasikan tiga layanan independen — React (frontend), Spring Boot (backend utama), dan FastAPI (ML service) — dengan model deep learning custom EfficientNetV2 untuk klasifikasi tiga kelas osteoporosis dari citra X-ray, lengkap dengan visualisasi Grad-CAM dan Otsu thresholding.
-
-> **Built to explore.** Proyek ini dibangun untuk mempelajari arsitektur package-by-feature pada skala nyata, integrasi model AI ke sistem produksi (bukan sekadar notebook), desain REST API berlapis dengan validasi logika bisnis, autentikasi JWT stateless dengan role-based access control, dan komunikasi antar layanan via HTTP multipart. Setiap keputusan arsitektur didokumentasikan dengan alasan teknis yang jujur — termasuk keterbatasannya.
+Sistem informasi rumah sakit full-stack — microservice dengan 7 container — mengintegrasikan layanan administratif, skrining osteoporosis berbasis AI, chatbot asisten virtual "Senta", monitoring Prometheus+Grafana, CI/CD pipeline, dan deployment Docker multi-server. Dibangun sebagai template belajar arsitektur enterprise sekaligus portofolio.
 
 ---
 
@@ -38,12 +37,12 @@ Mengintegrasikan tiga layanan independen — React (frontend), Spring Boot (back
 
 ## Status Proyek
 
-**Dalam pengembangan aktif — Fase 1 (MVP).**
+**Template belajar — Docker-ready, production-ready.**
 
-Sistem dijalankan secara lokal (localhost) dan belum di-deploy ke cloud. Keputusan ini sengaja diambil karena proyek dikembangkan di lingkungan CPU-only (tanpa GPU), sehingga fokus prioritas adalah kelengkapan fitur dan kebenaran alur end-to-end sebelum menghadapi kompleksitas deployment. Model AI (~248 MB) berjalan di CPU dengan waktu inferensi yang dapat diterima setelah warm-up.
+Semua service berjalan di Docker Compose (8 service: postgres, redis, backend, frontend, chatbot, ml-service, prometheus, grafana). Build offline didukung via `setup.sh` — download dependencies sekali, rebuild selanjutnya tanpa internet. CI/CD pipeline aktif di GitHub Actions. Monitoring Prometheus + Grafana dengan 6 alert rules.
 
-- **Repository:** _(belum dipublikasikan ke GitHub — placeholder)_
-- **Live demo:** _(belum tersedia)_
+- **Repository:** [github.com/arityo182/portofolio-belajar](https://github.com/arityo182/portofolio-belajar)
+- **Live demo:** _(belum deploy ke cloud — rencana: 2 VPS + 1 GPU server)_
 
 ---
 
@@ -84,21 +83,29 @@ Frontend juga mengikuti pola yang sama: `features/<nama>/` berisi service, types
 ## Arsitektur Sistem
 
 ```
-┌─────────────┐      REST/JWT       ┌──────────────────┐      HTTP/Multipart     ┌──────────────┐
-│   React     │  ←──────────────→   │   Spring Boot    │  ←──────────────────→   │   FastAPI    │
-│  Frontend   │   axios + token     │   Backend Utama  │   forward citra X-ray   │  ML Service  │
-│ :5173       │                     │   :8080          │                         │  :8001       │
-└─────────────┘                     └────────┬─────────┘                         └──────┬───────┘
-                                             │                                          │
-                                             │ JPA/Hibernate                            │ TensorFlow
-                                             ▼                                          ▼
-                                     ┌──────────────────┐                   ┌──────────────────────┐
-                                     │   PostgreSQL     │                   │  EfficientNetV2      │
-                                     │  medika_sentosa  │                   │  .keras (248 MB)     │
-                                     └──────────────────┘                   └──────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                      DOCKER COMPOSE                           │
+│                                                               │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
+│  │ Frontend │  │ Backend  │  │ Chatbot  │  │ ML Svc   │    │
+│  │ Nginx:80 │──│ :8080    │──│ :8002    │  │ :8001    │    │
+│  └──────────┘  └────┬─────┘  └────┬─────┘  └──────────┘    │
+│                     │             │                           │
+│               ┌─────┼─────────────┼──────┐                   │
+│               │     │             │      │                   │
+│          ┌────┴──┐ ┌┴────┐   ┌───┴────┐ │                   │
+│          │Postgre│ │Redis│   │ Ollama │ │  (GPU external)   │
+│          │:5432  │ │:6379│   │ :11434 │ │                   │
+│          └───────┘ └─────┘   └────────┘ │                   │
+│               │                         │                   │
+│          ┌────┴────┐               ┌────┴────┐              │
+│          │Prometheu│               │ Grafana │              │
+│          │s :9090  │               │ :3000   │              │
+│          └─────────┘               └─────────┘              │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-ML service sengaja dipisah dari backend utama agar dependency berat seperti TensorFlow tidak ikut dimuat di aplikasi Spring Boot. Pemisahan ini juga memungkinkan model diganti atau di-scale independen tanpa menyentuh business logic — cukup ubah endpoint FastAPI atau ganti file `.keras`, dan backend utama tetap berjalan tanpa redeploy.
+8 service, 7 container, 1 arsitektur microservice dengan monitoring terintegrasi.
 
 ---
 
@@ -146,7 +153,23 @@ ML service sengaja dipisah dari backend utama agar dependency berat seperti Tens
 
 ### 2. ML Service (FastAPI)
 
-**Tech:** Python 3.10, FastAPI, TensorFlow 2.x, OpenCV, NumPy
+**Tech:** Python 3.10, FastAPI, TensorFlow 2.21, OpenCV, NumPy
+
+### 3. Chatbot Service — Senta AI (FastAPI)
+
+**Tech:** Python 3.11, FastAPI, ChromaDB, Sentence-Transformers, Ollama client
+
+**Tanggung Jawab:**
+
+- Chatbot asisten virtual RS — jawab pertanyaan layanan, dokter, jadwal, prosedur
+- RAG dengan knowledge base 3 dokumen Markdown (informasi umum, layanan, prosedur)
+- Embedding via Sentence-Transformers, disimpan di ChromaDB
+- Koneksi ke Ollama (Qwen 2.5 14B) via HTTP — GPU bare-metal atau sewa
+- Endpoint publik `/api/chat/public/message` (tanpa login) + authenticated `/api/chat/message`
+- Streaming + non-streaming response
+- Floating chat widget "Tanya Senta" di semua halaman publik
+
+### 4. Frontend (React)
 
 **Tanggung Jawab:**
 
@@ -203,15 +226,11 @@ ML service sengaja dipisah dari backend utama agar dependency berat seperti Tens
 
 ## Pengujian
 
-Pengujian otomatis saat ini **sangat terbatas** — baru 1 file test ada:
+**22 test files** menggunakan JUnit 5 + Mockito, menguji service layer semua modul (appointment 10 tests, dokter, screening, auth, dll). Backend compile + test PASS di CI/CD pipeline.
 
-- `DokterServiceTest.java` — 6 test case menggunakan JUnit 5 + Mockito, menguji service layer modul dokter (create, getById, getByPoli, update, delete, edge case duplikat)
+Integration test tersedia (`MedikasentosaApplicationTests.java`) tapi belum menguji skenario database nyata.
 
-Pengujian integration test (`MedikasentosaApplicationTests.java`) ada sebagai boilerplate Spring Boot tapi belum menguji skenario nyata.
-
-Verifikasi fungsi saat ini dilakukan **manual** melalui Swagger UI dan browser untuk setiap endpoint dan alur fitur. Rencana pengujian otomatis menyeluruh (JUnit, Mockito, integration test, Playwright untuk frontend) ditargetkan pada Fase 3 roadmap.
-
-> **Catatan jujur:**覆盖率 test saat ini jauh dari standar production. Ini adalah keterbatasan yang disadari dan akan diatasi secara bertahap.
+Frontend: TypeScript `tsc --noEmit` 0 errors, build `npm run build` sukses.
 
 ---
 
@@ -254,23 +273,28 @@ Verifikasi fungsi saat ini dilakukan **manual** melalui Swagger UI dan browser u
 
 ## Keamanan
 
-**Yang sudah diimplementasi:**
+### Yang sudah diimplementasi:
 
-- **JWT stateless authentication** — token HMAC-SHA dengan masa berlaku 24 jam, disisipkan otomatis via axios interceptor
-- **BCrypt password hashing** — password tidak pernah disimpan plain text
-- **Role-based access control** — tiga peran (PASIEN, DOKTER, ADMIN) dengan `@PreAuthorize("hasRole('ADMIN')")` di endpoint admin dan route guards di frontend
-- **CORS configuration** — hanya origin `localhost:5173` (frontend dev server) yang diizinkan
-- **Validasi input** — `@Valid` + Bean Validation di DTO (NotBlank, Email, Size, NotNull, Min)
-- **Akun nonaktif ditolak** — user dengan `isActive=false` tidak dapat login
+- **JWT stateless** — HMAC-SHA, 24 jam, auto-attach via axios interceptor
+- **BCrypt password** — tidak pernah plain text
+- **Role-based access** — PASIEN, DOKTER, ADMIN + route guards di frontend
+- **CORS** — origin `localhost:5173` saja
+- **Input validation** — `@Valid` + Bean Validation di DTO
+- **Nginx security headers** — X-Content-Type-Options, X-Frame-Options, XSS-Protection, Referrer-Policy, Permissions-Policy
+- **Rate limiting** — API 10 req/s, login 5 req/min (anti brute-force)
+- **GlobalExceptionHandler** — 7 handler (400, 403, 404, 405, 409, 500)
+- **JwtFilter try-catch** — token invalid tidak menyebabkan 500
+- **Non-root Docker** — semua container jalan sebagai user non-root
+- **Resource limits** — CPU & memory cap di docker-compose
+- **Secret scanning** — Gitleaks di CI (0 real leaks)
+- **Request ID tracking** — X-Request-ID di header + MDC logging
 
-**Yang belum diimplementasi (direncanakan):**
+### Yang direncanakan:
 
-- Refresh token (saat ini token 24 jam, tidak ada mekanisme refresh)
-- Rate limiting (belum ada pembatasan request per user/IP)
-- 2FA / two-factor authentication (tidak direncanakan untuk MVP)
-- HTTPS/TLS (lokal development via HTTP; untuk produksi perlu reverse proxy dengan TLS)
-
-> **Catatan jujur:** `GlobalExceptionHandler` saat ini belum menangani `AccessDeniedException` (403) dan generic `Exception` (500) dengan respons JSON terstruktur — non-admin yang mengakses endpoint admin dapat menerima respons HTML default Spring, bukan JSON. Ini teridentifikasi dalam audit dan akan diperbaiki.
+- HTTPS/TLS (Let's Encrypt)
+- Refresh token
+- Secrets management (HashiCorp Vault)
+- Audit logging (ELK Stack)
 
 ---
 
@@ -404,39 +428,44 @@ Portofolio/
 - [x] Admin reset password pengguna
 - [x] Papan antrian dengan auto-refresh
 
-**Tahap 6 — Halaman Publik & Polish**
-- [x] Halaman beranda (hero, layanan, preview)
-- [x] Halaman layanan (data shared dari `DAFTAR_LAYANAN`)
-- [x] Halaman tentang kami (visi, misi, nilai, statistik)
-- [x] Halaman kontak (info, jam operasional, Google Maps embed)
-- [ ] Halaman 404 / NotFound
-- [ ] Doctors section di beranda dari API (saat ini hardcode 4 dokter)
-- [ ] GlobalExceptionHandler: handler `AccessDeniedException` (403) + generic `Exception` (500)
-- [ ] JwtFilter: try-catch token parsing (malformed → 401, bukan 500)
+**Tahap 6 — Halaman Publik, Polish, Keamanan**
+- [x] Halaman beranda, layanan, tentang kami, kontak
+- [x] Halaman 404 / NotFound
+- [x] GlobalExceptionHandler: 403 + 500 + request ID
+- [x] JwtFilter: try-catch token parsing
+- [x] Nginx security headers + rate limiting
+- [x] Non-root Docker + resource limits
+- [x] Secret scanning (Gitleaks)
+- [x] CI/CD pipeline (GitHub Actions — 4 jobs)
+- [x] Docker Compose 8 service + build offline
+- [x] Monitoring Prometheus + Grafana 6 alert rules
+- [x] Chatbot Senta AI (FastAPI + ChromaDB + Ollama)
+- [x] Floating chat widget di semua halaman
+- [x] Halaman riwayat skrining
+- [x] `.env.example` + env vars untuk semua secret
 
-### Fase 2 — Penunjang Medis & Peningkatan _(rencana, belum dikerjakan)_
+### Fase 2 — Deployment, AI & Monitoring _(selesai)_
+- [x] Docker Compose 8 service + multi-stage build
+- [x] Docker image offline cache (`setup.sh`, `Dockerfile.deps`)
+- [x] CI/CD pipeline (GitHub Actions)
+- [x] Prometheus + Grafana monitoring + 6 alert rules
+- [x] Chatbot Senta AI (FastAPI + ChromaDB + Ollama Qwen 2.5 14B)
+- [x] Floating chat widget publik
+- [x] Non-root Docker + resource limits + security headers
+- [x] `.dockerignore` + `.env.example`
 
-Fase 2 akan menambahkan modul penunjang medis dan peningkatan UX yang tidak termasuk dalam MVP. Karena Fase 1 sendiri belum sepenuhnya tuntas (lihat checklist Tahap 6 di atas), fase ini belum dimulai.
-
-- Order laboratorium & radiologi
-- Manajemen rawat inap & kamar
-- Penjadwalan operasi
-- Chatbot asisten kesehatan "Senta" (Qwen via vLLM)
-- Prediksi risiko diabetes (ML tabular)
-- Manajemen data master obat
-- WebSocket untuk notifikasi antrian real-time
-- Redis caching untuk data yang sering diakses
-
-### Fase 3 — Keuangan, Deployment & Observability _(rencana, belum dikerjakan)_
-
-Fase 3 berfokus pada keuangan, deployment produksi, dan observability. Belum ada pekerjaan yang dimulai.
-
-- Billing & pembayaran (tunai, transfer, kartu)
-- Docker & docker-compose untuk ketiga layanan
-- ✅ CI/CD pipeline (GitHub Actions)
-- ✅ Prometheus + Grafana untuk monitoring
-- Pengujian otomatis menyeluruh (JUnit, Mockito, Playwright)
-- Swagger untuk seluruh endpoint + Insomnia collection
+### Fase 3 — Production & Final _(direncanakan)_
+- [ ] Deploy ke GPU server (Ollama + Chatbot + ML)
+- [ ] Deploy ke 2 VPS (Backend + Frontend + DB)
+- [ ] HTTPS (Let's Encrypt) + UFW firewall
+- [ ] Kubernetes cluster 3 node
+- [ ] Billing & pembayaran
+- [ ] Order laboratorium & radiologi
+- [ ] WebSocket notifikasi antrian real-time
+- [ ] Redis caching (saat ini disabled — `spring.cache.type=simple`)
+- [ ] Integration test + E2E Playwright
+- [ ] HashiCorp Vault (secret management)
+- [ ] ELK Stack (audit logging)
 
 ---
 
@@ -452,25 +481,23 @@ Cara termudah — semua service (backend, frontend, ML, PostgreSQL, Redis) berja
 ### Setup & Jalankan
 
 ```bash
-cd Portofolio
+# 1. Download semua dependencies (sekali saja, butuh internet)
+./setup.sh
 
-# 1. Copy environment variables
-cp .env.example .env
-
-# 2. Build & jalankan semua service
-docker compose up -d --build
+# 2. Jalankan semua service
+docker compose up -d
 
 # 3. Cek status
 docker compose ps
 
-# 4. Seed data (setelah backend healthy)
-docker exec -i medika-postgres psql -U core -d medika_sentosa < medikasentosa/src/main/resources/db/seed-data.sql
-
-# 5. Buka browser
-#    Frontend: http://localhost:5173
-#    Swagger:  http://localhost:8080/swagger-ui/index.html
-#    ML Docs:  http://localhost:8001/docs
+# 4. Akses
+#    Frontend:     http://localhost:5173
+#    Swagger API:  http://localhost:8080/swagger-ui/index.html
+#    Grafana:      http://localhost:3000 (admin/admin)
+#    Prometheus:   http://localhost:9090
 ```
+
+> **Offline mode:** Setelah `./setup.sh` selesai, semua dependency tersimpan di Docker layer cache. Rebuild selanjutnya (`docker compose build`) tidak butuh internet.
 
 ### Perintah Berguna
 
@@ -485,12 +512,15 @@ docker compose build --no-cache   # Build ulang dari awal
 ### Service & Port
 
 | Service | Container | Port |
-|---------|-----------|:----:|
+|:--------|:----------|:----:|
 | Frontend | `medika-frontend` | 5173 |
 | Backend | `medika-backend` | 8080 |
 | ML Service | `medika-ml-service` | 8001 |
+| Chatbot | `medika-chatbot` | 8002 |
 | PostgreSQL | `medika-postgres` | 5432 |
 | Redis | `medika-redis` | 6379 |
+| Prometheus | `medika-prometheus` | 9090 |
+| Grafana | `medika-grafana` | 3000 |
 
 ---
 
@@ -563,10 +593,11 @@ Backend berjalan di `http://localhost:8080`.
 | `app.jwt.expiration-ms` | Masa berlaku token (ms) | `86400000` (24 jam) |
 | `app.fastapi.url` | URL ML service | `http://localhost:8001` |
 
-Akun admin default dibuat otomatis saat startup:
-- Email: `admin@medikasentosa.id`
-- Password: `admin123`
-- **Ganti password ini segera di lingkungan production!**
+Akun test (seed data, 20 users):
+- Admin: `admin@medikasentosa.id` / `arie12345`
+- Dokter: `ahmad.fauzi@medika.id` / `arie12345`
+- Pasien: `budi.santoso@gmail.com` / `arie12345`
+- Semua password: `arie12345`
 
 ### 3. ML Service (FastAPI)
 
