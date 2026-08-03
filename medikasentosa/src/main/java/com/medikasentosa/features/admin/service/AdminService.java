@@ -19,6 +19,8 @@ import com.medikasentosa.features.pasien.service.PasienService;
 import com.medikasentosa.features.poli.repository.PoliRepository;
 import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +39,8 @@ import java.util.List;
  */
 @Service
 public class AdminService {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminService.class);
 
     private final UserRepository userRepository;
     private final DokterRepository dokterRepository;
@@ -76,8 +80,10 @@ public class AdminService {
      */
     @Transactional
     public DokterResponse createDokterWithUser(DokterCreateRequest request) {
+        log.info("Creating dokter with user: email={}", request.email());
         // Validasi email unik
         if (userRepository.existsByEmail(request.email())) {
+            log.warn("Dokter creation failed: email {} already exists", request.email());
             throw new DuplicateResourceException("Email sudah terdaftar");
         }
 
@@ -126,7 +132,9 @@ public class AdminService {
      */
     @Transactional
     public PasienResponse createPasienWithUser(PasienCreateRequest request) {
+        log.info("Creating pasien with user: email={}", request.email());
         if (userRepository.existsByEmail(request.email())) {
+            log.warn("Pasien creation failed: email {} already exists", request.email());
             throw new DuplicateResourceException("Email sudah terdaftar");
         }
 
@@ -199,7 +207,9 @@ public class AdminService {
      */
     @Transactional
     public UserAdminResponse resetPassword(Long id, String newPassword) {
+        log.info("Resetting password for userId={}", id);
         if (newPassword == null || newPassword.length() < 6) {
+            log.warn("Password reset rejected: password too short for userId={}", id);
             throw new IllegalArgumentException("Password baru minimal 6 karakter");
         }
         User user = userRepository.findById(id)

@@ -10,6 +10,8 @@ import com.medikasentosa.features.jadwaloperasi.repository.JadwalOperasiReposito
 import com.medikasentosa.features.pasien.entity.Pasien;
 import com.medikasentosa.features.pasien.repository.PasienRepository;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,6 +25,8 @@ import java.util.List;
  */
 @Service
 public class JadwalOperasiService {
+
+    private static final Logger log = LoggerFactory.getLogger(JadwalOperasiService.class);
 
     private final JadwalOperasiRepository repo;
     private final PasienRepository pasienRepo;
@@ -40,12 +44,14 @@ public class JadwalOperasiService {
      * Membuat jadwal operasi baru. Validasi: pasien & dokter ada, tanggal tidak lampau.
      */
     public JadwalOperasiResponse create(JadwalOperasiRequest req) {
+        log.info("Creating jadwal operasi for pasienId={}, dokterId={}", req.pasienId(), req.dokterId());
         Pasien pasien = pasienRepo.findById(req.pasienId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pasien tidak ditemukan"));
         Dokter dokter = dokterRepo.findById(req.dokterId())
                 .orElseThrow(() -> new ResourceNotFoundException("Dokter tidak ditemukan"));
 
         if (req.tanggalOperasi().isBefore(LocalDate.now())) {
+            log.warn("Jadwal operasi rejected: tanggal {} is in the past", req.tanggalOperasi());
             throw new IllegalArgumentException("Tanggal operasi tidak boleh di masa lalu");
         }
 
@@ -82,6 +88,7 @@ public class JadwalOperasiService {
      * Memperbarui status jadwal operasi.
      */
     public JadwalOperasiResponse updateStatus(Long id, StatusOperasi status) {
+        log.info("Updating jadwal operasi id={} status to {}", id, status);
         JadwalOperasi jo = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Jadwal operasi tidak ditemukan"));
         jo.setStatus(status);

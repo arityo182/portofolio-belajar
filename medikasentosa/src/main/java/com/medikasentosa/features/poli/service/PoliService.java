@@ -6,8 +6,12 @@ import com.medikasentosa.features.poli.entity.Poli;
 import com.medikasentosa.features.poli.repository.PoliRepository;
 import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +25,8 @@ import java.util.List;
  */
 @Service
 public class PoliService {
+
+    private static final Logger log = LoggerFactory.getLogger(PoliService.class);
 
     private final PoliRepository poliRepository;
 
@@ -37,7 +43,9 @@ public class PoliService {
      */
     @CacheEvict(value = "poli-all", allEntries = true) // invalidasi cache daftar poli
     public PoliResponse create(PoliRequest request) {
+        log.info("Creating poli: {}", request.nama());
         if (poliRepository.existsByNamaIgnoreCase(request.nama())) {
+            log.warn("Poli with name '{}' already exists", request.nama());
             throw new DuplicateResourceException("Poli dengan nama ini sudah ada");
         }
 
@@ -62,6 +70,10 @@ public class PoliService {
                 .stream().map(this::toResponse).toList();
     }
 
+    public Page<PoliResponse> getAll(Pageable pageable) {
+        return poliRepository.findAll(pageable).map(this::toResponse);
+    }
+
     /**
      * Mengambil satu poli berdasarkan ID.
      *
@@ -84,6 +96,7 @@ public class PoliService {
      */
     @CacheEvict(value = {"poli-all", "poli-by-id"}, allEntries = true) // invalidasi semua cache poli
     public PoliResponse update(Long id, PoliRequest request) {
+        log.info("Updating poli id={}", id);
         Poli poli = findOrThrow(id);
         poli.setNama(request.nama());
         poli.setDeskripsi(request.deskripsi());
@@ -99,6 +112,7 @@ public class PoliService {
      */
     @CacheEvict(value = {"poli-all", "poli-by-id"}, allEntries = true) // invalidasi cache
     public void deactivate(Long id) {
+        log.info("Deactivating poli id={}", id);
         Poli poli = findOrThrow(id);
         poli.setIsActive(false);
         poliRepository.save(poli);

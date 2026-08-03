@@ -9,6 +9,8 @@ import com.medikasentosa.features.pasien.entity.Pasien;
 import com.medikasentosa.features.pasien.repository.PasienRepository;
 import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -24,6 +26,8 @@ import java.util.List;
  */
 @Service
 public class PasienService {
+
+    private static final Logger log = LoggerFactory.getLogger(PasienService.class);
 
     private final PasienRepository pasienRepository;
     private final UserRepository userRepository;
@@ -43,9 +47,11 @@ public class PasienService {
      * @throws DuplicateResourceException bila user sudah terdaftar sebagai pasien
      */
     public PasienResponse create(PasienRequest request) {
+        log.info("Creating pasien for userId={}", request.userId());
         User user = findUserOrThrow(request.userId());
 
         if (pasienRepository.existsByUserId(request.userId())) {
+            log.warn("User {} already registered as pasien", request.userId());
             throw new DuplicateResourceException("User sudah terdaftar sebagai pasien");
         }
 
@@ -125,6 +131,7 @@ public class PasienService {
      * @throws ResourceNotFoundException bila pasien tidak ditemukan
      */
     public PasienResponse update(Long id, PasienRequest request) {
+        log.info("Updating pasien id={}", id);
         Pasien pasien = findOrThrow(id);
         pasien.setNik(request.nik());
         pasien.setTanggalLahir(request.tanggalLahir());

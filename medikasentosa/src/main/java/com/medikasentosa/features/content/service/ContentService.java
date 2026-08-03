@@ -2,6 +2,8 @@ package com.medikasentosa.features.content.service;
 
 import com.medikasentosa.features.content.entity.Content;
 import com.medikasentosa.features.content.repository.ContentRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +13,8 @@ import java.util.Map;
 
 @Service
 public class ContentService {
+
+    private static final Logger log = LoggerFactory.getLogger(ContentService.class);
 
     private final ContentRepository repo;
     public ContentService(ContentRepository r) { this.repo = r; }
@@ -25,6 +29,7 @@ public class ContentService {
     /** Save or update multiple sections for a page at once. */
     @Transactional
     public Map<String, String> savePageContent(String pageKey, Map<String, String> sections) {
+        log.info("Saving page content for pageKey={} with {} sections", pageKey, sections.size());
         sections.forEach((key, value) -> {
             Content c = repo.findByPageKeyAndSectionKey(pageKey, key)
                     .orElse(Content.builder().pageKey(pageKey).sectionKey(key).build());

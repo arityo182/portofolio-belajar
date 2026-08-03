@@ -7,6 +7,8 @@ import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
 import com.medikasentosa.features.auth.repository.UserRepository;
 import com.medikasentosa.shared.security.JwtService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -42,9 +46,11 @@ public class AuthService {
      */
     // Register
     public AuthResponse register(RegisterRequest request) {
+        log.info("Registering new user with email: {}", request.email());
 
         // Validasi cek email sudah dipakai atau belum
         if (userRepository.existsByEmail(request.email())) {
+            log.warn("Registration failed: email {} already exists", request.email());
             throw new DuplicateResourceException("Email sudah terdaftar");
         }
 
@@ -70,6 +76,7 @@ public class AuthService {
      * @throws ResourceNotFoundException bila email tidak ditemukan atau password salah
      */
     public AuthResponse login(LoginRequest request) {
+        log.info("Login attempt for email: {}", request.email());
 
         // Validasi email apakah sudah ada atau belum
         User user = userRepository.findByEmail(request.email())
@@ -77,11 +84,13 @@ public class AuthService {
 
         // Validasi apakah password cocok
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            log.warn("Login failed: invalid password for email {}", request.email());
             throw new ResourceNotFoundException("Email atau password salah");
         }
 
         // Validasi akun masih aktif
         if (Boolean.FALSE.equals(user.getIsActive())) {
+            log.warn("Login failed: account disabled for email {}", request.email());
             throw new ResourceNotFoundException("Akun Anda dinonaktifkan. Hubungi admin.");
         }
 

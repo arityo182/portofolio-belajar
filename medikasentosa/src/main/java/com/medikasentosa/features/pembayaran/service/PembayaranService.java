@@ -6,6 +6,8 @@ import com.medikasentosa.features.pembayaran.dto.*;
 import com.medikasentosa.features.pembayaran.entity.*;
 import com.medikasentosa.features.pembayaran.repository.PembayaranRepository;
 import com.medikasentosa.shared.exception.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,8 @@ import java.util.List;
 @Service
 public class PembayaranService {
 
+    private static final Logger log = LoggerFactory.getLogger(PembayaranService.class);
+
     private final PembayaranRepository repo;
     private final BillingRepository billingRepo;
 
@@ -33,14 +37,19 @@ public class PembayaranService {
      */
     @Transactional
     public PembayaranResponse proses(PembayaranRequest req) {
+        log.info("Processing payment for billingId={}, metode={}", req.billingId(), req.metodePembayaran());
         Billing b = billingRepo.findById(req.billingId())
                 .orElseThrow(() -> new ResourceNotFoundException("Billing tidak ditemukan"));
 
-        if (b.getStatus() != StatusBilling.BELUM_BAYAR)
+        if (b.getStatus() != StatusBilling.BELUM_BAYAR) {
+            log.warn("Payment rejected: billing {} already {}", req.billingId(), b.getStatus());
             throw new IllegalStateException("Billing sudah " + b.getStatus().name());
+        }
 
-        if (req.jumlahBayar().compareTo(b.getTotalHarga()) < 0)
+        if (req.jumlahBayar().compareTo(b.getTotalHarga()) < 0) {
+            log.warn("Payment rejected: jumlah bayar {} < total {}", req.jumlahBayar(), b.getTotalHarga());
             throw new IllegalArgumentException("Jumlah bayar kurang dari total tagihan (Rp " + b.getTotalHarga() + ")");
+        }
 
         // TODO: Integrasi V-Claim BPJS untuk metode BPJS
         if (req.metodePembayaran() == MetodePembayaran.BPJS) {

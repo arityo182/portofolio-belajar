@@ -3,6 +3,8 @@ package com.medikasentosa.features.appointment.repository;
 import com.medikasentosa.features.appointment.entity.Appointment;
 import com.medikasentosa.features.appointment.entity.StatusAppointment;
 import com.medikasentosa.features.jadwaldokter.entity.JadwalDokter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
@@ -46,6 +48,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
      * @return daftar appointment pasien tersebut
      */
     List<Appointment> findByPasienId(Long pasienId);
+
+    Page<Appointment> findByPasienId(Long pasienId, Pageable pageable);
 
     // Ambil semua appointment milik seorang dokter (untuk panel dokter)
     List<Appointment> findByDokterId(Long dokterId);

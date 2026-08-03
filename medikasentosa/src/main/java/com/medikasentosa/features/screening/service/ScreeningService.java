@@ -7,6 +7,8 @@ import com.medikasentosa.features.auth.entity.User;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
 import com.medikasentosa.features.screening.repository.ScreeningRepository;
 import com.medikasentosa.features.auth.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
@@ -36,6 +38,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 public class ScreeningService {
+
+    private static final Logger log = LoggerFactory.getLogger(ScreeningService.class);
 
     private final RestTemplate restTemplate;
     private final ScreeningRepository screeningRepository;
@@ -72,6 +76,7 @@ public class ScreeningService {
      * @throws ResourceNotFoundException bila user dengan email tersebut tidak ditemukan
      */
     public ScreeningResponse screen(MultipartFile file, String email) throws IOException {
+        log.info("Processing screening for email={}", email);
 
         // 1. cari user
         User user = userRepository.findByEmail(email)

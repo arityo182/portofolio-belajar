@@ -11,6 +11,8 @@ import com.medikasentosa.features.rawatinap.entity.RawatInap;
 import com.medikasentosa.features.rawatinap.entity.StatusRawatInap;
 import com.medikasentosa.features.rawatinap.repository.RawatInapRepository;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,8 @@ import java.util.List;
  */
 @Service
 public class RawatInapService {
+
+    private static final Logger log = LoggerFactory.getLogger(RawatInapService.class);
 
     private final RawatInapRepository rawatInapRepository;
     private final KamarService kamarService;
@@ -62,6 +66,7 @@ public class RawatInapService {
      */
     @Transactional
     public RawatInapResponse masuk(RawatInapRequest request) {
+        log.info("Rawat inap masuk for pasienId={}, kamarId={}", request.pasienId(), request.kamarId());
         Pasien pasien = pasienRepository.findById(request.pasienId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pasien tidak ditemukan"));
         Dokter dokter = dokterRepository.findById(request.dokterId())
@@ -69,9 +74,11 @@ public class RawatInapService {
 
         Kamar kamar = kamarService.findOrThrow(request.kamarId());
         if (!kamar.getIsActive()) {
+            log.warn("Kamar {} is not active", request.kamarId());
             throw new IllegalStateException("Kamar tidak tersedia (dinonaktifkan)");
         }
         if (kamar.getTerisi() >= kamar.getKapasitas()) {
+            log.warn("Kamar {} is full ({}/{})", kamar.getNomorKamar(), kamar.getTerisi(), kamar.getKapasitas());
             throw new IllegalStateException(
                     "Kamar " + kamar.getNomorKamar() + " sudah penuh ("
                             + kamar.getTerisi() + "/" + kamar.getKapasitas() + ")");
@@ -113,10 +120,12 @@ public class RawatInapService {
      */
     @Transactional
     public RawatInapResponse keluar(Long id, LocalDate tanggalKeluar) {
+        log.info("Rawat inap keluar id={}", id);
         RawatInap ri = rawatInapRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rawat inap tidak ditemukan"));
 
         if (ri.getStatus() != StatusRawatInap.AKTIF) {
+            log.warn("Rawat inap {} already {}", id, ri.getStatus());
             throw new IllegalStateException(
                     "Rawat inap ini sudah " + ri.getStatus().name().toLowerCase());
         }

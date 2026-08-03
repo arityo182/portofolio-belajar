@@ -1,5 +1,7 @@
 package com.medikasentosa.shared.notification;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,8 @@ import java.util.Map;
 @Service
 public class NotificationService {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
+
     private final SimpMessagingTemplate messaging;
 
     public NotificationService(SimpMessagingTemplate messaging) {
@@ -36,6 +40,7 @@ public class NotificationService {
      * @param pasienId      ID pasien pemilik appointment
      */
     public void broadcastStatusAppointment(Long appointmentId, String status, Long pasienId) {
+        log.info("Broadcasting appointment status change: appointmentId={}, status={}", appointmentId, status);
         var payload = Map.of(
                 "type", "APPOINTMENT_STATUS",
                 "appointmentId", appointmentId,
@@ -56,6 +61,7 @@ public class NotificationService {
      * @param nomorDipanggil nomor antrian yang sedang dipanggil
      */
     public void broadcastStatusAntrian(Long jadwalId, LocalDate tanggal, Integer nomorDipanggil) {
+        log.info("Broadcasting antrian update: jadwalId={}, nomor={}", jadwalId, nomorDipanggil);
         var payload = Map.of(
                 "type", "ANTRIAN_UPDATE",
                 "jadwalId", jadwalId,

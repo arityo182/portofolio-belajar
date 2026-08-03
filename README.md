@@ -93,9 +93,9 @@ Frontend juga mengikuti pola yang sama: `features/<nama>/` berisi service, types
 │                     │             │                           │
 │               ┌─────┼─────────────┼──────┐                   │
 │               │     │             │      │                   │
-│          ┌────┴──┐ ┌┴────┐   ┌───┴────┐ │                   │
-│          │Postgre│ │Redis│   │ Ollama │ │  (GPU external)   │
-│          │:5432  │ │:6379│   │ :11434 │ │                   │
+│          ┌────┴──┐ ┌┴────┐   ┌────────┐ │                   │
+│          │Postgre│ │Redis│   │ vLLM   │ │  (GPU external)   │
+│          │:5432  │ │:6379│   │ :8100  │ │                   │
 │          └───────┘ └─────┘   └────────┘ │                   │
 │               │                         │                   │
 │          ┌────┴────┐               ┌────┴────┐              │
@@ -157,14 +157,14 @@ Frontend juga mengikuti pola yang sama: `features/<nama>/` berisi service, types
 
 ### 3. Chatbot Service — Senta AI (FastAPI)
 
-**Tech:** Python 3.11, FastAPI, ChromaDB, Sentence-Transformers, Ollama client
+**Tech:** Python 3.11, FastAPI, ChromaDB, Sentence-Transformers, vLLM client
 
 **Tanggung Jawab:**
 
 - Chatbot asisten virtual RS — jawab pertanyaan layanan, dokter, jadwal, prosedur
 - RAG dengan knowledge base 3 dokumen Markdown (informasi umum, layanan, prosedur)
 - Embedding via Sentence-Transformers, disimpan di ChromaDB
-- Koneksi ke Ollama (Qwen 2.5 14B) via HTTP — GPU bare-metal atau sewa
+- Koneksi ke vLLM (Qwen 2.5 14B) via HTTP OpenAI-compatible API — GPU bare-metal atau sewa (Vast.ai RTX 3090)
 - Endpoint publik `/api/chat/public/message` (tanpa login) + authenticated `/api/chat/message`
 - Streaming + non-streaming response
 - Floating chat widget "Tanya Senta" di semua halaman publik
@@ -439,7 +439,7 @@ Portofolio/
 - [x] CI/CD pipeline (GitHub Actions — 4 jobs)
 - [x] Docker Compose 8 service + build offline
 - [x] Monitoring Prometheus + Grafana 6 alert rules
-- [x] Chatbot Senta AI (FastAPI + ChromaDB + Ollama)
+- [x] Chatbot Senta AI (FastAPI + ChromaDB + vLLM)
 - [x] Floating chat widget di semua halaman
 - [x] Halaman riwayat skrining
 - [x] `.env.example` + env vars untuk semua secret
@@ -449,13 +449,13 @@ Portofolio/
 - [x] Docker image offline cache (`setup.sh`, `Dockerfile.deps`)
 - [x] CI/CD pipeline (GitHub Actions)
 - [x] Prometheus + Grafana monitoring + 6 alert rules
-- [x] Chatbot Senta AI (FastAPI + ChromaDB + Ollama Qwen 2.5 14B)
+- [x] Chatbot Senta AI (FastAPI + ChromaDB + vLLM Qwen 2.5 14B)
 - [x] Floating chat widget publik
 - [x] Non-root Docker + resource limits + security headers
 - [x] `.dockerignore` + `.env.example`
 
 ### Fase 3 — Production & Final _(direncanakan)_
-- [ ] Deploy ke GPU server (Ollama + Chatbot + ML)
+- [ ] Deploy ke GPU server (vLLM + Chatbot + ML)
 - [ ] Deploy ke 2 VPS (Backend + Frontend + DB)
 - [ ] HTTPS (Let's Encrypt) + UFW firewall
 - [ ] Kubernetes cluster 3 node

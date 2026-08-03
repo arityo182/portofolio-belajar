@@ -13,8 +13,9 @@ services:
     ports:
       - "8002:8002"
     environment:
-      OLLAMA_BASE_URL: http://10.0.1.40:11434
-      OLLAMA_MODEL: qwen2.5:14b
+      VLLM_BASE_URL: http://10.0.1.40:8100
+      VLLM_MODEL: Qwen/Qwen2.5-14B-Instruct
+      VLLM_API_KEY: ${VLLM_API_KEY:-no-key}
     volumes:
       - ../chatbot-service/knowledge_base:/app/knowledge_base:ro
       - chroma_data:/app/chroma_db

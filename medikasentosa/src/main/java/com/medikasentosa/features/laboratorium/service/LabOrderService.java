@@ -8,6 +8,8 @@ import com.medikasentosa.features.laboratorium.repository.LabOrderRepository;
 import com.medikasentosa.features.rekammedis.entity.RekamMedis;
 import com.medikasentosa.features.rekammedis.repository.RekamMedisRepository;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +23,8 @@ import java.util.List;
  */
 @Service
 public class LabOrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(LabOrderService.class);
 
     private final LabOrderRepository labOrderRepository;
     private final RekamMedisRepository rekamMedisRepository;
@@ -40,6 +44,7 @@ public class LabOrderService {
      * @throws ResourceNotFoundException bila rekam medis tidak ditemukan
      */
     public LabOrderResponse create(LabOrderRequest request) {
+        log.info("Creating lab order for rekamMedisId={}", request.rekamMedisId());
         RekamMedis rekamMedis = rekamMedisRepository.findById(request.rekamMedisId())
                 .orElseThrow(() -> new ResourceNotFoundException("Rekam medis tidak ditemukan"));
 
@@ -84,6 +89,7 @@ public class LabOrderService {
      * @throws ResourceNotFoundException bila order tidak ditemukan
      */
     public LabOrderResponse updateStatus(Long id, StatusLab status) {
+        log.info("Updating lab order id={} status to {}", id, status);
         LabOrder order = findOrThrow(id);
         order.setStatus(status);
         labOrderRepository.save(order);

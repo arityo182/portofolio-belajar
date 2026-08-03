@@ -9,6 +9,8 @@ import com.medikasentosa.features.laboratorium.repository.LabHasilRepository;
 import com.medikasentosa.features.laboratorium.repository.LabOrderRepository;
 import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class LabHasilService {
+
+    private static final Logger log = LoggerFactory.getLogger(LabHasilService.class);
 
     private final LabHasilRepository labHasilRepository;
     private final LabOrderRepository labOrderRepository;
@@ -45,10 +49,12 @@ public class LabHasilService {
      */
     @Transactional
     public LabHasilResponse create(LabHasilRequest request) {
+        log.info("Creating lab hasil for labOrderId={}", request.labOrderId());
         LabOrder order = labOrderRepository.findById(request.labOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order laboratorium tidak ditemukan"));
 
         if (labHasilRepository.existsByLabOrderId(request.labOrderId())) {
+            log.warn("Lab order {} already has hasil", request.labOrderId());
             throw new DuplicateResourceException("Order laboratorium ini sudah memiliki hasil");
         }
 

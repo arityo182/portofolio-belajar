@@ -1,33 +1,34 @@
 import { C } from "../../../core/theme";
 import type { FloatingMessage } from "../types";
 
-/**
- * Properti untuk {@link FloatingChatBubble}.
- */
 interface BubbleProps {
-  /** Data pesan */
   message: FloatingMessage;
 }
 
-/**
- * Auto-scroll ke bawah saat mount / konten berubah.
- */
-function sanitize(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\n/g, "<br/>")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/- (.+)/g, "&bull; $1");
+/** Render markdown-like bold and bullet points safely as React elements */
+function renderContent(text: string) {
+  const lines = text.split("\n");
+  return lines.map((line, i) => {
+    // Bold: **text**
+    const parts = line.split(/(\*\*.*?\*\*)/g);
+    const rendered = parts.map((part, j) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return <strong key={j}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+    // Bullet: - text
+    if (line.startsWith("- ")) {
+      return (
+        <div key={i}>
+          • {rendered.map((r) => (typeof r === "string" ? r.replace(/^- /, "") : r))}
+        </div>
+      );
+    }
+    return <div key={i}>{rendered}</div>;
+  });
 }
 
-/**
- * Satu bubble chat di floating widget. Tampilan berbeda untuk user vs assistant.
- *
- * @param props - lihat {@link BubbleProps}
- * @returns Elemen bubble
- */
 export default function FloatingChatBubble({ message }: BubbleProps) {
   const isUser = message.role === "user";
 
@@ -56,8 +57,9 @@ export default function FloatingChatBubble({ message }: BubbleProps) {
                 borderRadius: "16px 16px 16px 4px",
               }
         }
-        dangerouslySetInnerHTML={{ __html: sanitize(message.content) }}
-      />
+      >
+        {renderContent(message.content)}
+      </div>
     </div>
   );
 }

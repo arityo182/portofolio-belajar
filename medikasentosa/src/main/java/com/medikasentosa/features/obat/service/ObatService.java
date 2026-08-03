@@ -6,6 +6,8 @@ import com.medikasentosa.features.obat.entity.Obat;
 import com.medikasentosa.features.obat.repository.ObatRepository;
 import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ import java.util.List;
 @Service
 public class ObatService {
 
+    private static final Logger log = LoggerFactory.getLogger(ObatService.class);
+
     private final ObatRepository obatRepository;
 
     public ObatService(ObatRepository obatRepository) {
@@ -38,7 +42,9 @@ public class ObatService {
      */
     @CacheEvict(value = "obat-all", allEntries = true)
     public ObatResponse create(ObatRequest request) {
+        log.info("Creating obat: {}", request.nama());
         if (obatRepository.existsByNamaIgnoreCase(request.nama())) {
+            log.warn("Obat with name '{}' already exists", request.nama());
             throw new DuplicateResourceException("Obat dengan nama ini sudah ada");
         }
 
@@ -89,11 +95,13 @@ public class ObatService {
      */
     @CacheEvict(value = "obat-all", allEntries = true)
     public ObatResponse update(Long id, ObatRequest request) {
+        log.info("Updating obat id={}", id);
         Obat obat = findOrThrow(id);
 
         // Cek duplikat nama hanya jika nama diubah
         if (!obat.getNama().equalsIgnoreCase(request.nama())
                 && obatRepository.existsByNamaIgnoreCase(request.nama())) {
+            log.warn("Obat with name '{}' already exists", request.nama());
             throw new DuplicateResourceException("Obat dengan nama ini sudah ada");
         }
 
@@ -115,6 +123,7 @@ public class ObatService {
      */
     @CacheEvict(value = "obat-all", allEntries = true)
     public void deactivate(Long id) {
+        log.info("Deactivating obat id={}", id);
         Obat obat = findOrThrow(id);
         obat.setIsActive(false);
         obatRepository.save(obat);
@@ -123,9 +132,12 @@ public class ObatService {
     /** Kurangi stok obat (saat diberikan ke pasien). */
     @Transactional
     public ObatResponse kurangiStok(Long id, int jumlah) {
+        log.info("Reducing stok obat id={} by {}", id, jumlah);
         Obat obat = findOrThrow(id);
-        if (obat.getStok() < jumlah)
+        if (obat.getStok() < jumlah) {
+            log.warn("Stok obat id={} tidak mencukupi: requested={}, available={}", id, jumlah, obat.getStok());
             throw new IllegalArgumentException("Stok tidak mencukupi (" + obat.getStok() + " tersedia)");
+        }
         obat.setStok(obat.getStok() - jumlah);
         obatRepository.save(obat);
         return toResponse(obat);

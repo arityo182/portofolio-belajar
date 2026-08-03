@@ -15,6 +15,10 @@ import com.medikasentosa.features.pasien.repository.PasienRepository;
 import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
 import com.medikasentosa.shared.notification.NotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +36,8 @@ import java.util.List;
  */
 @Service
 public class AppointmentService {
+
+    private static final Logger log = LoggerFactory.getLogger(AppointmentService.class);
 
     private final AppointmentRepository appointmentRepository;
     private final PasienRepository pasienRepository;
@@ -79,6 +85,7 @@ public class AppointmentService {
      */
     @Transactional
     public AppointmentResponse create(AppointmentRequest request) {
+        log.info("Creating appointment for pasienId={}, jadwalId={}", request.pasienId(), request.jadwalId());
         // 1. Pasien ada
         Pasien pasien = pasienRepository.findById(request.pasienId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pasien tidak ditemukan"));
@@ -89,12 +96,14 @@ public class AppointmentService {
 
         // 3. Jadwal aktif
         if (!Boolean.TRUE.equals(jadwal.getIsActive())) {
+            log.warn("Appointment rejected: jadwal {} is not active", request.jadwalId());
             throw new IllegalArgumentException("Jadwal tidak aktif");
         }
 
         // 4. Hari dari tanggal cocok dengan hari jadwal
         Hari hariTanggal = toHari(request.tanggal());
         if (hariTanggal != jadwal.getHari()) {
+            log.warn("Appointment rejected: date {} does not match jadwal day {}", request.tanggal(), jadwal.getHari());
             throw new IllegalArgumentException(
                     "Tanggal tidak sesuai hari jadwal (jadwal hari " + jadwal.getHari() + ")");
         }
@@ -102,6 +111,8 @@ public class AppointmentService {
         // 5. Pasien belum booking jadwal + tanggal yang sama
         if (appointmentRepository.existsByPasienIdAndJadwalAndTanggal(
                 pasien.getId(), jadwal, request.tanggal())) {
+            log.warn("Appointment rejected: duplicate booking for pasienId={} jadwalId={} tanggal={}",
+                    pasien.getId(), request.jadwalId(), request.tanggal());
             throw new DuplicateResourceException(
                     "Pasien sudah memiliki janji temu pada jadwal dan tanggal ini");
         }
@@ -109,6 +120,7 @@ public class AppointmentService {
         // 6. Kuota belum penuh
         long terisi = appointmentRepository.countByJadwalAndTanggal(jadwal, request.tanggal());
         if (terisi >= jadwal.getKuota()) {
+            log.warn("Appointment rejected: kuota penuh for jadwalId={}", request.jadwalId());
             throw new IllegalArgumentException("Kuota jadwal pada tanggal ini sudah penuh");
         }
 
@@ -139,6 +151,14 @@ public class AppointmentService {
     public List<AppointmentResponse> getAll() {
         return appointmentRepository.findAll()
                 .stream().map(this::toResponse).toList();
+    }
+
+    public Page<AppointmentResponse> getAll(Pageable pageable) {
+        return appointmentRepository.findAll(pageable).map(this::toResponse);
+    }
+
+    public Page<AppointmentResponse> getByPasien(Long pasienId, Pageable pageable) {
+        return appointmentRepository.findByPasienId(pasienId, pageable).map(this::toResponse);
     }
 
     /**
@@ -183,6 +203,7 @@ public class AppointmentService {
      * @throws ResourceNotFoundException bila appointment tidak ditemukan
      */
     public AppointmentResponse updateStatus(Long id, StatusAppointment status) {
+        log.info("Updating appointment id={} status to {}", id, status);
         Appointment appointment = findOrThrow(id);
         appointment.setStatus(status);
         appointmentRepository.save(appointment);

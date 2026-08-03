@@ -13,7 +13,7 @@ SVR1="user@10.0.1.10"   # PostgreSQL + Redis
 SVR2="user@10.0.1.20"   # Backend Spring Boot
 SVR3="user@10.0.1.25"   # Frontend Nginx
 SVR4="user@10.0.1.30"   # Chatbot + ML Service
-SVR5="user@10.0.1.40"   # GPU Ollama (bare-metal)
+SVR5="user@10.0.1.40"   # GPU vLLM (bare-metal)
 
 echo "============================================"
 echo " 🚀 Deploy RS Medika Sentosa ke 5 Server"
@@ -54,15 +54,15 @@ case "${1:-all}" in
     
     # 5. GPU
     echo ""
-    echo "━━━ Server 5: GPU Ollama ━━━"
-    echo "   (pastikan ollama sudah berjalan di :11434)"
+    echo "━━━ Server 5: GPU vLLM ━━━"
+    echo "   (pastikan vllm serve sudah berjalan di :8100)"
     ;;
 
   svr1) ssh $SVR1 "cd ~/medika && docker compose up -d" ;;
   svr2) ssh $SVR2 "cd ~/medika && docker compose build && docker compose up -d" ;;
   svr3) ssh $SVR3 "cd ~/medika && docker compose build && docker compose up -d" ;;
   svr4) ssh $SVR4 "cd ~/medika && docker compose build && docker compose up -d" ;;
-  svr5) echo "GPU server: pastikan ollama serve berjalan di :11434" ;;
+  svr5) echo "GPU server: pastikan vllm serve berjalan di :8100" ;;
 
   down)
     echo ">>> Stop semua server..."

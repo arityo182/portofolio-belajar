@@ -7,6 +7,8 @@ import com.medikasentosa.features.jadwaldokter.dto.JadwalDokterResponse;
 import com.medikasentosa.features.jadwaldokter.entity.JadwalDokter;
 import com.medikasentosa.features.jadwaldokter.repository.JadwalDokterRepository;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,8 @@ import java.util.List;
  */
 @Service
 public class JadwalDokterService {
+
+    private static final Logger log = LoggerFactory.getLogger(JadwalDokterService.class);
 
     private final JadwalDokterRepository jadwalDokterRepository;
     private final DokterRepository dokterRepository;
@@ -42,6 +46,7 @@ public class JadwalDokterService {
      */
     @CacheEvict(value = "jadwal-by-dokter", key = "#request.dokterId()")
     public JadwalDokterResponse create(JadwalDokterRequest request) {
+        log.info("Creating jadwal dokter for dokterId={}", request.dokterId());
         Dokter dokter = findDokterOrThrow(request.dokterId());
         validateJam(request);
 
@@ -105,6 +110,7 @@ public class JadwalDokterService {
      */
     @CacheEvict(value = "jadwal-by-dokter", key = "#request.dokterId()")
     public JadwalDokterResponse update(Long id, JadwalDokterRequest request) {
+        log.info("Updating jadwal dokter id={}", id);
         JadwalDokter jadwal = findOrThrow(id);
         validateJam(request);
 
@@ -124,6 +130,7 @@ public class JadwalDokterService {
      */
     @CacheEvict(value = "jadwal-by-dokter", allEntries = true) // invalidasi seluruh cache jadwal
     public void deactivate(Long id) {
+        log.info("Deactivating jadwal dokter id={}", id);
         JadwalDokter jadwal = findOrThrow(id);
         jadwal.setIsActive(false);
         jadwalDokterRepository.save(jadwal);
@@ -131,6 +138,7 @@ public class JadwalDokterService {
 
     private void validateJam(JadwalDokterRequest request) {
         if (!request.jamMulai().isBefore(request.jamSelesai())) {
+            log.warn("Invalid jam: mulai={} selesai={}", request.jamMulai(), request.jamSelesai());
             throw new IllegalArgumentException("Jam mulai harus sebelum jam selesai");
         }
     }

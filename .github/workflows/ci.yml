@@ -17,7 +17,7 @@ jobs:
         env:
           POSTGRES_DB: medika_sentosa
           POSTGRES_USER: core
-          POSTGRES_PASSWORD: arie12345
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         ports:
           - 5432:5432
         options: >-
@@ -43,7 +43,7 @@ jobs:
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/medika_sentosa
           SPRING_DATASOURCE_USERNAME: core
-          SPRING_DATASOURCE_PASSWORD: arie12345
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: ./gradlew test --no-daemon
 
       - name: Upload Test Results

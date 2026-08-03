@@ -1,6 +1,8 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
+const WS_BASE = import.meta.env.VITE_WS_URL || window.location.origin;
+
 /**
  * Membuat instance STOMP client terhubung ke backend WebSocket endpoint /ws.
  *
@@ -9,7 +11,7 @@ import SockJS from "sockjs-client";
  */
 export function createSocketClient(jwtToken: string): Client {
   return new Client({
-    webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+    webSocketFactory: () => new SockJS(`${WS_BASE}/ws`),
     connectHeaders: {
       Authorization: `Bearer ${jwtToken}`,
     },

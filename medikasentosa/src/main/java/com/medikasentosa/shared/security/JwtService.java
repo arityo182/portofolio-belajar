@@ -3,6 +3,8 @@ package com.medikasentosa.shared.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -14,14 +16,16 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtService.class);
+
     @Value("${app.jwt.secret}")
     private String secret;
 
     @Value("${app.jwt.expiration-ms}")
     private long expirationMs;
 
-    // Buat token saat berhasil login
     public String generateToken(String email) {
+        log.info("Generating JWT token for email={}", email);
         return Jwts.builder().subject(email).issuedAt(new Date()) // berdasarkan email dan kapan dibuat
                 .expiration(new Date(System.currentTimeMillis() + expirationMs)) // Kedaluarsa
                 .signWith(getSignKey()) // TTD rahasia

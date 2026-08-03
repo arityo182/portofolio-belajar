@@ -7,6 +7,8 @@ import com.medikasentosa.features.billing.entity.*;
 import com.medikasentosa.features.billing.repository.*;
 import com.medikasentosa.features.pasien.entity.Pasien;
 import com.medikasentosa.shared.exception.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,8 @@ import java.util.List;
 @Service
 public class BillingService {
 
+    private static final Logger log = LoggerFactory.getLogger(BillingService.class);
+
     private final BillingRepository billingRepo;
     private final BillingItemRepository itemRepo;
     private final AppointmentRepository appointmentRepo;
@@ -37,6 +41,7 @@ public class BillingService {
      */
     @Transactional
     public BillingResponse generateDariAppointment(Long appointmentId) {
+        log.info("Generating billing for appointmentId={}", appointmentId);
         Appointment a = appointmentRepo.findById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment tidak ditemukan"));
         Pasien p = a.getPasien();
@@ -60,9 +65,12 @@ public class BillingService {
      */
     @Transactional
     public BillingResponse tambahItem(Long billingId, BillingItemRequest req) {
+        log.info("Adding item to billing id={}", billingId);
         Billing b = findOrThrow(billingId);
-        if (b.getStatus() != StatusBilling.BELUM_BAYAR)
+        if (b.getStatus() != StatusBilling.BELUM_BAYAR) {
+            log.warn("Cannot add item to billing {} with status {}", billingId, b.getStatus());
             throw new IllegalStateException("Hanya billing BELUM_BAYAR yang bisa ditambah item");
+        }
 
         BigDecimal sub = req.hargaSatuan().multiply(BigDecimal.valueOf(req.jumlah()));
         BillingItem item = BillingItem.builder().billing(b)
@@ -96,6 +104,7 @@ public class BillingService {
 
     @Transactional
     public BillingResponse batalkan(Long id) {
+        log.info("Cancelling billing id={}", id);
         Billing b = findOrThrow(id);
         b.setStatus(StatusBilling.DIBATALKAN);
         billingRepo.save(b);

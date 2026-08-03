@@ -22,7 +22,7 @@ collection:
           description: |-
             **Expected:** 200
             ```json
-            { "status": "UP", "model": "qwen2.5:14b", "ollama_reachable": true }
+            { "status": "UP", "model": "Qwen/Qwen2.5-14B-Instruct", "vllm_reachable": true }
             ```
         method: GET
         headers:

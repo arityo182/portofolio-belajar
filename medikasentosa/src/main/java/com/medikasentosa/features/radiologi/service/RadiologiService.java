@@ -8,6 +8,8 @@ import com.medikasentosa.features.radiologi.repository.RadiologiRepository;
 import com.medikasentosa.features.rekammedis.entity.RekamMedis;
 import com.medikasentosa.features.rekammedis.repository.RekamMedisRepository;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,6 +27,8 @@ import java.util.List;
  */
 @Service
 public class RadiologiService {
+
+    private static final Logger log = LoggerFactory.getLogger(RadiologiService.class);
 
     private final RadiologiRepository radiologiRepository;
     private final RekamMedisRepository rekamMedisRepository;
@@ -44,6 +48,7 @@ public class RadiologiService {
      * @throws ResourceNotFoundException bila rekam medis tidak ditemukan
      */
     public RadiologiResponse create(RadiologiRequest request) {
+        log.info("Creating radiologi order for rekamMedisId={}", request.rekamMedisId());
         RekamMedis rekamMedis = rekamMedisRepository.findById(request.rekamMedisId())
                 .orElseThrow(() -> new ResourceNotFoundException("Rekam medis tidak ditemukan"));
 
@@ -89,6 +94,7 @@ public class RadiologiService {
      * @throws ResourceNotFoundException bila order tidak ditemukan
      */
     public RadiologiResponse updateHasil(Long id, String hasilDeskripsi, String gambarUrl) {
+        log.info("Updating radiologi hasil id={}", id);
         Radiologi radiologi = findOrThrow(id);
         radiologi.setHasilDeskripsi(hasilDeskripsi);
         radiologi.setGambarUrl(gambarUrl);

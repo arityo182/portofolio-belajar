@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +45,14 @@ public class PoliController {
     @ApiResponse(responseCode = "200", description = "Daftar poli berhasil diambil")
     public List<PoliResponse> getAll() {
         return poliService.getAll();
+    }
+
+    @GetMapping("/paginated")
+    @Operation(summary = "Ambil semua poli (paginated)",
+               description = "Mengembalikan daftar poli dengan pagination.")
+    @ApiResponse(responseCode = "200", description = "Daftar poli berhasil diambil")
+    public Page<PoliResponse> getAllPaginated(Pageable pageable) {
+        return poliService.getAll(pageable);
     }
 
     /**

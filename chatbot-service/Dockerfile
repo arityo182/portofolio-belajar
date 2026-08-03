@@ -1,7 +1,9 @@
 # ============================================
-# CHATBOT SERVICE — FastAPI + Ollama + RAG
+# CHATBOT SERVICE — FastAPI + vLLM + RAG
 # ============================================
 # OFFLINE: FROM medika-chatbot-deps (deps udah di-image)
+# vLLM berjalan di GPU server (Vast.ai), chatbot service
+# menghubunginya via HTTP OpenAI-compatible API.
 # ============================================
 
 FROM medika-chatbot-deps:latest

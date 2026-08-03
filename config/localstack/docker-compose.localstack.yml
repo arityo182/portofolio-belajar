@@ -1,0 +1,37 @@
+# ============================================
+# LOCALSTACK — S3 Simulation (UNCOMMENT SAAT DEVELOPMENT)
+# ============================================
+# Untuk simulasi S3 upload tanpa akun AWS asli.
+# Berguna untuk development X-ray upload feature.
+#
+# Setup:
+#   docker compose -f docker-compose.localstack.yml up -d
+#   aws --endpoint-url=http://localhost:4566 s3 mb s3://medika-xray
+#
+# Spring Boot config:
+#   app.s3.endpoint-url=http://localhost:4566
+#   app.s3.bucket=medika-xray
+#   cloud.aws.region.static=ap-southeast-1
+# ============================================
+
+# services:
+#   localstack:
+#     image: localstack/localstack:latest
+#     container_name: medika-localstack
+#     restart: unless-stopped
+#     ports:
+#       - "4566:4566"
+#     environment:
+#       SERVICES: s3
+#       DEFAULT_REGION: ap-southeast-1
+#       DATA_DIR: /var/lib/localstack/data
+#     volumes:
+#       - localstack_data:/var/lib/localstack
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#
+# volumes:
+#   localstack_data:

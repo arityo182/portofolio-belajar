@@ -6,6 +6,8 @@ import com.medikasentosa.features.rawatinap.entity.Kamar;
 import com.medikasentosa.features.rawatinap.repository.KamarRepository;
 import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +22,8 @@ import java.util.List;
 @Service
 public class KamarService {
 
+    private static final Logger log = LoggerFactory.getLogger(KamarService.class);
+
     private final KamarRepository kamarRepository;
 
     public KamarService(KamarRepository kamarRepository) {
@@ -30,7 +34,9 @@ public class KamarService {
      * Membuat data kamar baru.
      */
     public KamarResponse create(KamarRequest request) {
+        log.info("Creating kamar: {}", request.nomorKamar());
         if (kamarRepository.existsByNomorKamarIgnoreCase(request.nomorKamar())) {
+            log.warn("Kamar with nomor '{}' already exists", request.nomorKamar());
             throw new DuplicateResourceException("Nomor kamar sudah ada");
         }
 
@@ -65,10 +71,12 @@ public class KamarService {
      * Memperbarui data kamar.
      */
     public KamarResponse update(Long id, KamarRequest request) {
+        log.info("Updating kamar id={}", id);
         Kamar kamar = findOrThrow(id);
 
         if (!kamar.getNomorKamar().equalsIgnoreCase(request.nomorKamar())
                 && kamarRepository.existsByNomorKamarIgnoreCase(request.nomorKamar())) {
+            log.warn("Kamar with nomor '{}' already exists", request.nomorKamar());
             throw new DuplicateResourceException("Nomor kamar sudah ada");
         }
 
@@ -84,6 +92,7 @@ public class KamarService {
      * Menonaktifkan kamar (soft delete).
      */
     public void deactivate(Long id) {
+        log.info("Deactivating kamar id={}", id);
         Kamar kamar = findOrThrow(id);
         kamar.setIsActive(false);
         kamarRepository.save(kamar);

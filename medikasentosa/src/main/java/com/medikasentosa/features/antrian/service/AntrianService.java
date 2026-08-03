@@ -7,6 +7,8 @@ import com.medikasentosa.features.appointment.entity.Appointment;
 import com.medikasentosa.features.appointment.repository.AppointmentRepository;
 import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +23,8 @@ import java.util.List;
  */
 @Service
 public class AntrianService {
+
+    private static final Logger log = LoggerFactory.getLogger(AntrianService.class);
 
     private final AntrianRepository antrianRepository;
     private final AppointmentRepository appointmentRepository;
@@ -42,10 +46,12 @@ public class AntrianService {
      * @throws DuplicateResourceException bila appointment sudah memiliki antrian
      */
     public AntrianResponse generateAntrian(Long appointmentId) {
+        log.info("Generating antrian for appointmentId={}", appointmentId);
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment tidak ditemukan"));
 
         if (antrianRepository.existsByAppointmentId(appointmentId)) {
+            log.warn("Antrian already exists for appointmentId={}", appointmentId);
             throw new DuplicateResourceException("Antrian untuk appointment ini sudah ada");
         }
 

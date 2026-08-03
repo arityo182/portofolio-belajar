@@ -9,6 +9,8 @@ import com.medikasentosa.features.resep.dto.ResepResponse;
 import com.medikasentosa.features.resep.entity.Resep;
 import com.medikasentosa.features.resep.repository.ResepRepository;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,8 @@ import java.util.List;
  */
 @Service
 public class ResepService {
+
+    private static final Logger log = LoggerFactory.getLogger(ResepService.class);
 
     private final ResepRepository resepRepository;
     private final RekamMedisRepository rekamMedisRepository;
@@ -53,6 +57,7 @@ public class ResepService {
      */
     @Transactional
     public ResepResponse create(ResepRequest request) {
+        log.info("Creating resep for rekamMedisId={}", request.rekamMedisId());
         RekamMedis rekamMedis = rekamMedisRepository.findById(request.rekamMedisId())
                 .orElseThrow(() -> new ResourceNotFoundException("Rekam medis tidak ditemukan"));
 
@@ -63,6 +68,8 @@ public class ResepService {
                     .orElseThrow(() -> new ResourceNotFoundException("Obat tidak ditemukan"));
             // === AUTO-REDUCE STOK ===
             if (obat.getStok() < request.jumlah()) {
+                log.warn("Stok obat tidak mencukupi: obatId={}, requested={}, available={}",
+                        request.obatId(), request.jumlah(), obat.getStok());
                 throw new IllegalArgumentException(
                         "Stok obat tidak mencukupi (tersisa " + obat.getStok() + ")");
             }
@@ -73,6 +80,7 @@ public class ResepService {
         // Validasi: minimal salah satu dari obatId atau namaObat harus ada
         String namaObatFallback = request.namaObat();
         if (obat == null && (namaObatFallback == null || namaObatFallback.isBlank())) {
+            log.warn("Resep rejected: neither obatId nor namaObat provided");
             throw new IllegalArgumentException(
                     "namaObat wajib diisi jika obatId tidak diberikan");
         }
@@ -108,6 +116,7 @@ public class ResepService {
      * @throws ResourceNotFoundException bila resep tidak ditemukan
      */
     public void delete(Long id) {
+        log.info("Deleting resep id={}", id);
         Resep resep = resepRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Resep tidak ditemukan"));
         resepRepository.delete(resep);

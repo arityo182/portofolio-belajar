@@ -11,6 +11,8 @@ import com.medikasentosa.features.poli.entity.Poli;
 import com.medikasentosa.features.poli.repository.PoliRepository;
 import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,6 +27,8 @@ import java.util.List;
  */
 @Service
 public class DokterService {
+
+    private static final Logger log = LoggerFactory.getLogger(DokterService.class);
 
     private final DokterRepository dokterRepository;
     private final UserRepository userRepository;
@@ -47,9 +51,11 @@ public class DokterService {
      * @throws DuplicateResourceException bila user sudah terdaftar sebagai dokter
      */
     public DokterResponse create(DokterRequest request) {
+        log.info("Creating dokter for userId={}", request.userId());
         User user = findUserOrThrow(request.userId());
 
         if (dokterRepository.existsByUserId(request.userId())) {
+            log.warn("User {} already registered as dokter", request.userId());
             throw new DuplicateResourceException("User ini sudah terdaftar sebagai dokter");
         }
 
@@ -127,6 +133,7 @@ public class DokterService {
      * @throws ResourceNotFoundException bila dokter atau poli tidak ditemukan
      */
     public DokterResponse update(Long id, DokterRequest request) {
+        log.info("Updating dokter id={}", id);
         Dokter dokter = findOrThrow(id);
         Poli poli = findPoliOrThrow(request.poliId());
 
@@ -145,6 +152,7 @@ public class DokterService {
      * @throws ResourceNotFoundException bila dokter tidak ditemukan
      */
     public void delete(Long id) {
+        log.info("Deactivating dokter id={}", id);
         Dokter dokter = findOrThrow(id);
         dokter.setIsActive(false);
         dokterRepository.save(dokter);

@@ -9,6 +9,8 @@ import com.medikasentosa.features.rekammedis.entity.RekamMedis;
 import com.medikasentosa.features.rekammedis.repository.RekamMedisRepository;
 import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,8 @@ import java.util.List;
  */
 @Service
 public class RekamMedisService {
+
+    private static final Logger log = LoggerFactory.getLogger(RekamMedisService.class);
 
     private final RekamMedisRepository rekamMedisRepository;
     private final AppointmentRepository appointmentRepository;
@@ -51,12 +55,14 @@ public class RekamMedisService {
      */
     @Transactional
     public RekamMedisResponse create(RekamMedisRequest request) {
+        log.info("Creating rekam medis for appointmentId={}", request.appointmentId());
         // 1. Appointment ada
         Appointment appointment = appointmentRepository.findById(request.appointmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment tidak ditemukan"));
 
         // 2. Appointment belum punya rekam medis
         if (rekamMedisRepository.existsByAppointmentId(appointment.getId())) {
+            log.warn("Appointment {} already has rekam medis", request.appointmentId());
             throw new DuplicateResourceException("Appointment ini sudah memiliki rekam medis");
         }
 

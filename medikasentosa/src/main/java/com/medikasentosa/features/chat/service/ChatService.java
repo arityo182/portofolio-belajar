@@ -13,6 +13,8 @@ import com.medikasentosa.features.pasien.repository.PasienRepository;
 import com.medikasentosa.features.poli.repository.PoliRepository;
 import com.medikasentosa.features.rekammedis.repository.RekamMedisRepository;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class ChatService {
+
+    private static final Logger log = LoggerFactory.getLogger(ChatService.class);
 
     private final ChatSessionRepository sessionRepo;
     private final ChatMessageRepository messageRepo;
@@ -59,6 +63,7 @@ public class ChatService {
      * Kirim pesan ke Senta → simpan USER + ASSISTANT → return response.
      */
     public ChatMessageResponse sendMessage(Long userId, ChatMessageRequest req) {
+        log.info("Sending chat message for userId={}", userId);
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User tidak ditemukan"));
 

@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,6 +49,14 @@ public class AppointmentController {
         return appointmentService.getAll();
     }
 
+    @GetMapping("/paginated")
+    @Operation(summary = "Ambil semua appointment (paginated)",
+               description = "Mengembalikan daftar appointment dengan pagination.")
+    @ApiResponse(responseCode = "200", description = "Daftar appointment berhasil diambil")
+    public Page<AppointmentResponse> getAllPaginated(Pageable pageable) {
+        return appointmentService.getAll(pageable);
+    }
+
     /**
      * Mengambil detail satu appointment berdasarkan ID.
      *
@@ -76,6 +86,14 @@ public class AppointmentController {
     @ApiResponse(responseCode = "200", description = "Daftar appointment berhasil diambil")
     public List<AppointmentResponse> getByPasien(@PathVariable Long pasienId) {
         return appointmentService.getByPasien(pasienId);
+    }
+
+    @GetMapping("/pasien/{pasienId}/paginated")
+    @Operation(summary = "Ambil appointment berdasarkan pasien (paginated)",
+               description = "Mengembalikan janji temu milik pasien tertentu dengan pagination.")
+    @ApiResponse(responseCode = "200", description = "Daftar appointment berhasil diambil")
+    public Page<AppointmentResponse> getByPasienPaginated(@PathVariable Long pasienId, Pageable pageable) {
+        return appointmentService.getByPasien(pasienId, pageable);
     }
 
     /**

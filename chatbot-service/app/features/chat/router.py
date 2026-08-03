@@ -3,8 +3,8 @@ import uuid
 from fastapi import APIRouter, HTTPException
 from sse_starlette.sse import EventSourceResponse
 
-from app.core.config import OLLAMA_MODEL
-from app.core.ollama_client import chat_complete, chat_stream, check_ollama_health
+from app.core.config import VLLM_MODEL
+from app.core.vllm_client import chat_complete, chat_stream, check_vllm_health
 from app.features.chat.schema import ChatRequest, ChatResponse
 from app.features.chat.prompt_builder import build_system_prompt
 from app.features.chat.rag_service import RAGService
@@ -15,13 +15,13 @@ rag = RAGService()
 
 @router.get("/health")
 async def health():
-    """Health check + status Ollama."""
-    ollama_up = await check_ollama_health()
+    """Health check + status vLLM."""
+    vllm_up = await check_vllm_health()
     return {
         "status": "UP",
         "service": "Senta Chatbot — RS Medika Sentosa",
-        "model": OLLAMA_MODEL,
-        "ollama_reachable": ollama_up,
+        "model": VLLM_MODEL,
+        "vllm_reachable": vllm_up,
         "rag_docs": rag.collection.count() if rag else 0,
     }
 
@@ -46,11 +46,11 @@ async def chat_message(req: ChatRequest):
         messages.append({"role": h.get("role", "user"), "content": h.get("content", "")})
     messages.append({"role": "user", "content": req.message})
 
-    # Chat
+    # Chat via vLLM (GPU server)
     try:
         response = await chat_complete(messages)
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Gagal terhubung ke Ollama: {str(e)}")
+        raise HTTPException(status_code=503, detail=f"Gagal terhubung ke vLLM: {str(e)}")
 
     return ChatResponse(
         response=response or "Maaf, Senta sedang tidak bisa merespon. Silakan coba lagi.",

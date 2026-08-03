@@ -19,6 +19,7 @@
 .DS_Store
 Thumbs.db
 Desktop.ini
+*:Zone.Identifier
 
 # ============================================
 # Backend (Spring Boot / Gradle)
@@ -56,6 +57,7 @@ ml-service/models/*.hdf5
 docker-volumes/
 *.log
 *.pid
+wget-log
 
 # Offline packages (dari disasterwatch script)
 offline-packages/
@@ -73,6 +75,7 @@ $HOME/docker-offline/
 # ============================================
 # Chatbot Service
 # ============================================
+chatbot-service/.env
 chatbot-service/chroma_db/
 chatbot-service/__pycache__/
 chatbot-service/**/__pycache__/
