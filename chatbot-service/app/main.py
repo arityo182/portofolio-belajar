@@ -32,9 +32,12 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:8080",
-        "http://localhost:3000",
+        "http://localhost:5173",      # React (dev)
+        "http://localhost:8080",      # Spring Boot (dev)
+        "http://localhost:3000",      # Grafana
+        "http://localhost:80",        # Nginx (Docker)
+        "https://mamedika.com",       # Production domain
+        "https://www.mamedika.com",   # Production domain (www)
     ],
     allow_credentials=True,
     allow_methods=["*"],

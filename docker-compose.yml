@@ -9,7 +9,6 @@
 # ============================================
 
 services:
-
   # ─── PostgreSQL 16 ───────────────────────────
   postgres:
     image: postgres:16-alpine
@@ -25,7 +24,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-core} -d ${POSTGRES_DB:-medika_sentosa}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-core} -d ${POSTGRES_DB:-medika_sentosa}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -63,7 +66,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
+          cpus: "2"
           memory: 1g
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-medika_sentosa}
@@ -73,6 +76,8 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       APP_FASTAPI_URL: ${FASTAPI_URL:-http://ml-service:8001}
       APP_CHATBOT_URL: ${APP_CHATBOT_URL:-http://chatbot:8002}
+      app.jwt.secret: ${JWT_SECRET}
+      app.jwt.expiration-ms: ${JWT_EXPIRATION_MS:-86400000}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
       REDIS_HOST: ${REDIS_HOST:-redis}
@@ -84,7 +89,11 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -so /dev/null http://localhost:8080/ || curl -so /dev/null http://localhost:8080/swagger-ui/index.html || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -so /dev/null http://localhost:8080/ || curl -so /dev/null http://localhost:8080/swagger-ui/index.html || exit 1",
+        ]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -108,28 +117,28 @@ services:
       start_period: 120s
 
   # ─── Chatbot Service (FastAPI + RAG) ──────────
-  chatbot:
-    build:
-      context: ./chatbot-service
-      dockerfile: Dockerfile
-      pull: false
-    container_name: medika-chatbot
-    restart: unless-stopped
-    ports:
-      - "8002:8002"
-    environment:
-      VLLM_BASE_URL: ${VLLM_BASE_URL:-http://localhost:8100}
-      VLLM_MODEL: ${VLLM_MODEL:-Qwen/Qwen2.5-14B-Instruct}
-      VLLM_API_KEY: ${VLLM_API_KEY:-no-key}
-    volumes:
-      - ./chatbot-service/knowledge_base:/app/knowledge_base:ro
-      - chroma_data:/app/chroma_db
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/chat/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+  # chatbot:
+  #   build:
+  #     context: ./chatbot-service
+  #     dockerfile: Dockerfile
+  #     pull: false
+  #   container_name: medika-chatbot
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8002:8002"
+  #   environment:
+  #     VLLM_BASE_URL: ${VLLM_BASE_URL:-http://localhost:8100}
+  #     VLLM_MODEL: ${VLLM_MODEL:-Qwen/Qwen2.5-14B-Instruct}
+  #     VLLM_API_KEY: ${VLLM_API_KEY:-no-key}
+  #   volumes:
+  #     - ./chatbot-service/knowledge_base:/app/knowledge_base:ro
+  #     - chroma_data:/app/chroma_db
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8002/chat/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 30s
 
   # ─── Frontend (Nginx) ────────────────────────
   frontend:
@@ -158,8 +167,8 @@ services:
       - ./config/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
     depends_on:
       - backend
 
@@ -186,4 +195,4 @@ volumes:
   redis_data:
   prometheus_data:
   grafana_data:
-  chroma_data:
+  # chroma_data:

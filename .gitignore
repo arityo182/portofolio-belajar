@@ -2,80 +2,118 @@
 # RS Medika Sentosa — .gitignore
 # ============================================
 
-# Environment (credentials)
+# ─── Environment & Secrets ──────────────────
 .env
+.env.*
 !.env.example
+!**/.env.example
+*.env
 *.local
+CREDENTIALS.md
+*.pem
+*.key
+*.cert
+*.crt
+id_rsa*
+id_ed25519*
 
-# IDE
+# ─── IDE & Editors ──────────────────────────
 .idea/
 *.iml
+*.iws
+*.ipr
 *.swp
 *.swo
 *~
 .vscode/
+!.vscode/extensions.json
+.settings/
+.classpath
+.project
 
-# OS
+# ─── OS Files ───────────────────────────────
 .DS_Store
 Thumbs.db
 Desktop.ini
 *:Zone.Identifier
+ehthumbs.db
 
-# ============================================
-# Backend (Spring Boot / Gradle)
-# ============================================
-medikasentosa/.gradle/
-medikasentosa/build/
-medikasentosa/bin/
-medikasentosa/out/
+# ─── Backend (Spring Boot / Java / Gradle) ──
+.gradle/
+**/.gradle/
+build/
+**/build/
+bin/
+**/bin/
+out/
+**/out/
+*.class
+*.jar
+*.war
+*.ear
+!gradle/wrapper/gradle-wrapper.jar
 
-# ============================================
-# Frontend (React / Node)
-# ============================================
-hospital-frontend/node_modules/
-hospital-frontend/dist/
-hospital-frontend/.vite/
+# ─── Frontend (React / Vite / Node) ─────────
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+dist-ssr/
+**/dist-ssr/
+.vite/
+**/.vite/
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# ============================================
-# ML Service (Python)
-# ============================================
-ml-service/venv/
-ml-service/__pycache__/
-ml-service/**/__pycache__/
-ml-service/*.pyc
-ml-service/*.pyo
+# ─── Python Services (ML & Chatbot) ─────────
+venv/
+.venv/
+**/venv/
+**/.venv/
+env/
+**/env/
+ENV/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
 
-# Model files (TERLALU BESAR — 250MB+ each)
-ml-service/models/*.keras
-ml-service/models/*.h5
-ml-service/models/*.hdf5
-!ml-service/models/.gitkeep
+# ─── Model Files & Vector DB (> 100MB) ──────
+*.keras
+*.h5
+*.hdf5
+*.onnx
+*.pt
+*.pth
+*.safetensors
+!**/models/.gitkeep
+chatbot-service/chroma_db/
+**/chroma_db/
 
-# ============================================
-# Docker / Data / Logs
-# ============================================
+# ─── Docker / Volumes / Logs ────────────────
 docker-volumes/
+**/docker-volumes/
+postgres_data/
+redis_data/
+grafana_data/
+prometheus_data/
 *.log
 *.pid
 wget-log
 
-# Offline packages (dari disasterwatch script)
+# ─── Offline Packages & Archives ────────────
 offline-packages/
-
-# Docker offline cache (download-deps.sh)
 docker-offline/
 $HOME/docker-offline/
-
-# Backup files
 *.bak
 *.backup
 *.tar
 *.tar.gz
-
-# ============================================
-# Chatbot Service
-# ============================================
-chatbot-service/.env
-chatbot-service/chroma_db/
-chatbot-service/__pycache__/
-chatbot-service/**/__pycache__/

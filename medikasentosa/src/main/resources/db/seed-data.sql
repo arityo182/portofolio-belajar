@@ -391,6 +391,25 @@ INSERT INTO pembayaran (id, billing_id, metode_pembayaran, jumlah_bayar, status,
 (2, 2, 'TRANSFER', 550000.00, 'BERHASIL', '/uploads/bukti/trf_20260711_001.jpg','2026-07-11 11:00:00', 'Transfer via BCA, sudah dikonfirmasi',                         '2026-07-11 11:00:00'),
 (3, 4, 'TRANSFER', 850000.00, 'BERHASIL', '/uploads/bukti/trf_20260714_001.jpg','2026-07-14 11:30:00', 'Transfer via Mandiri, dari Ibu Siti Nurhaliza',               '2026-07-14 11:30:00');
 
+-- Sinkronisasi sequence ke nilai MAX(id) agar auto-increment JPA tidak bentrok (duplicate key error)
+SELECT setval('users_id_seq', COALESCE((SELECT MAX(id) FROM users), 1));
+SELECT setval('poli_id_seq', COALESCE((SELECT MAX(id) FROM poli), 1));
+SELECT setval('dokter_id_seq', COALESCE((SELECT MAX(id) FROM dokter), 1));
+SELECT setval('pasien_id_seq', COALESCE((SELECT MAX(id) FROM pasien), 1));
+SELECT setval('jadwal_dokter_id_seq', COALESCE((SELECT MAX(id) FROM jadwal_dokter), 1));
+SELECT setval('appointment_id_seq', COALESCE((SELECT MAX(id) FROM appointment), 1));
+SELECT setval('antrian_id_seq', COALESCE((SELECT MAX(id) FROM antrian), 1));
+SELECT setval('rekam_medis_id_seq', COALESCE((SELECT MAX(id) FROM rekam_medis), 1));
+SELECT setval('resep_id_seq', COALESCE((SELECT MAX(id) FROM resep), 1));
+SELECT setval('obat_id_seq', COALESCE((SELECT MAX(id) FROM obat), 1));
+SELECT setval('kamar_id_seq', COALESCE((SELECT MAX(id) FROM kamar), 1));
+SELECT setval('lab_order_id_seq', COALESCE((SELECT MAX(id) FROM lab_order), 1));
+SELECT setval('lab_hasil_id_seq', COALESCE((SELECT MAX(id) FROM lab_hasil), 1));
+SELECT setval('radiologi_id_seq', COALESCE((SELECT MAX(id) FROM radiologi), 1));
+SELECT setval('billing_id_seq', COALESCE((SELECT MAX(id) FROM billing), 1));
+SELECT setval('billing_item_id_seq', COALESCE((SELECT MAX(id) FROM billing_item), 1));
+SELECT setval('pembayaran_id_seq', COALESCE((SELECT MAX(id) FROM pembayaran), 1));
+
 COMMIT;
 
 -- ================================================

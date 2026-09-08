@@ -5,14 +5,15 @@ Modul ini memuat model EfficientNetV2 hasil fine-tuning sekali saat import
 inferensi pada citra X-ray yang telah dipreprocessing.
 """
 
+import os
 import tensorflow as tf
 import numpy as np
 
 # ── MODEL LOADER ──────────────────────────────────────────────────────────
 # Model dimuat sekali saat modul di-import (bukan per-request) agar inferensi
 # cepat. `model` diekspor dan dipakai ulang oleh endpoint serta Grad-CAM.
-MODEL_PATH = "/home/arie12345/Belajar/Portofolio/ml-service/models/EfficientNetV2_FineTuning.keras"
-# MODEL_PATH = "/home/arie12345/Belajar/Portofolio/ml-service/models/ConvNeXt_FineTuning.keras"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.getenv("MODEL_PATH", os.path.join(BASE_DIR, "models", "EfficientNetV2_FineTuning.keras"))
 model = tf.keras.models.load_model(MODEL_PATH)
 
 # LABEL — urutan indeks harus sama dengan urutan output model.

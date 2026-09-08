@@ -58,8 +58,11 @@ app = FastAPI(
 # CORS
 app.add_middleware(CORSMiddleware,
                    allow_origins=[
-                       "http://localhost:8080",     # Spring Boot
-                        "http://localhost:5173",    # React
+                       "http://localhost:8080",     # Spring Boot (dev)
+                       "http://localhost:5173",     # React (dev)
+                       "http://localhost:80",        # Nginx (Docker)
+                       "https://mamedika.com",       # Production domain
+                       "https://www.mamedika.com",   # Production domain (www)
                    ],
                    allow_methods=["*"],
                    allow_headers=["*"],
