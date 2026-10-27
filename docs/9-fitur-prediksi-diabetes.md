@@ -88,11 +88,10 @@ simpan hasil ke DB → kembalikan ke frontend.
 ## 6. Struktur di Frontend (React)
 
 ```
-frontend/src/features/diabetes/
-├── pages/       → RiskScreening.tsx (form input 8 fitur)
-├── components/  → RiskResultCard.tsx (tampilkan risiko + faktor)
-├── services/    → diabetesService.ts
-└── types.ts     → RiskResult
+hospital-frontendjs/src/features/diabetes/
+├── pages/       → RiskScreening.jsx (form input 8 fitur)
+├── components/  → RiskResultCard.jsx (tampilkan risiko + faktor)
+└── services/    → diabetesService.js
 ```
 
 ## 7. Alur End-to-End

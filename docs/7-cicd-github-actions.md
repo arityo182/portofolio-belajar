@@ -10,7 +10,7 @@
 git push → GitHub Actions → [Test] → [Build] → [Deploy (opsional)]
                                   │
                                   ├── Backend: Java 21 + Gradle + PostgreSQL
-                                  ├── Frontend: Node 20 + TypeScript + Vite
+                                  ├── Frontend: Node 20 + JavaScript + Vite
                                   ├── ML Service: Python 3.11 import check
                                   └── Docker: Build semua images
 ```
@@ -27,7 +27,7 @@ git push → GitHub Actions → [Test] → [Build] → [Deploy (opsional)]
 |---|---|---|
 | `backend-test` | Build Java + run JUnit tests dengan PostgreSQL container | ubuntu-latest |
 | `ml-service-check` | Install Python deps + verify imports | ubuntu-latest |
-| `frontend-check` | TypeScript check + Vite build | ubuntu-latest |
+| `frontend-check` | JavaScript test + Vite build | ubuntu-latest |
 | `docker-build` | Build semua Docker images (depends on 3 jobs di atas) | ubuntu-latest |
 
 ---
@@ -40,7 +40,7 @@ Buka repo → **Settings** → **Secrets and variables** → **Actions**
 
 | Secret | Value | Keterangan |
 |---|---|---|
-| `POSTGRES_PASSWORD` | `dev_password_change_me` | Password PostgreSQL di CI |
+| `POSTGRES_PASSWORD` | _(secret GitHub, nilai acak)_ | Password PostgreSQL di CI |
 
 ### Untuk Deploy (opsional)
 
@@ -78,7 +78,7 @@ Klik workflow → klik job → lihat logs real-time.
 ```
 ✅ Backend — Java 21 Tests     (PASS)
 ✅ ML Service — Import Check   (PASS)
-✅ Frontend — TypeScript + Build (PASS)
+✅ Frontend — JavaScript + Build (PASS)
 ✅ Docker — Build Images        (PASS)
 ```
 
@@ -119,13 +119,13 @@ steps:
 steps:
   - Setup Node.js 20 (dengan npm cache)
   - npm ci
-  - npx tsc --noEmit       # TypeScript strict check
+  - npm test                # Vitest unit tests
   - npm run build           # Vite production build
   - Upload dist/ sebagai artifact
 ```
 
 **Yang di-check:**
-- TypeScript strict mode — zero `any` types
+- Unit test frontend (JavaScript) lolos
 - Build success = semua komponen compile
 
 ### ML Service Check
@@ -149,6 +149,7 @@ needs: [backend-test, ml-service-check, frontend-check]
 
 steps:
   - Build backend image (multi-stage)
+  - Build frontend deps image (medika-frontend-deps)
   - Build frontend image (multi-stage + Nginx)
   - Verify images exist
 ```
@@ -252,9 +253,9 @@ ls .github/workflows/
 
 ### Frontend build gagal
 ```bash
-# Cek TypeScript errors locally
-cd hospital-frontend
-npx tsc --noEmit
+# Cek error frontend locally
+cd hospital-frontendjs
+npm test
 npm run build
 ```
 

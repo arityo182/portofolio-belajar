@@ -50,9 +50,9 @@ Semua service berjalan di Docker Compose (8 service: postgres, redis, backend, f
 
 - **Pipeline AI end-to-end:** upload citra X-ray → preprocessing (median filter, CLAHE, resize, max-scaling) → inferensi model EfficientNetV2 → Grad-CAM + Otsu masking → hasil tersimpan ke PostgreSQL dengan visualisasi overlay
 - **Arsitektur package-by-feature** diterapkan konsisten di ketiga layanan — setiap modul (auth, poli, dokter, appointment, rekam medis, dst.) memiliki entity, repository, DTO, service, dan controller sendiri, bukan dibagi per layer
-- **Autentikasi JWT stateless** dengan role-based access control tiga peran: Pasien, Dokter, Admin — masing-masing dengan halaman dan endpoint terpisah
+- **Autentikasi JWT** dengan access token singkat (15 menit) di memori, refresh token HttpOnly, revokasi berbasis token version, dan role-based access control tiga peran: Pasien, Dokter, Admin
 - **Validasi logika bisnis berlapis** di backend: cek kuota jadwal dokter, validasi hari appointment cocok dengan jadwal praktik, anti double-booking, anti duplikat poli/dokter/pasien, generate nomor antrian otomatis per jadwal+tanggal, generate nomor rekam medis unik format `RM-YYYY-XXXXXX`
-- **Dokumentasi API otomatis:** Swagger UI (springdoc-openapi) di backend, FastAPI docs di ML service
+- **Dokumentasi API otomatis:** Swagger UI (springdoc-openapi) di backend dan FastAPI docs di ML service — nonaktif secara default, diaktifkan hanya untuk development
 - **Panel terpisah per peran:** admin panel (kelola poli/dokter/jadwal/pasien/antrian/pengguna), panel dokter (antrian pasien + buat rekam medis & resep), halaman pasien (booking, profil, riwayat rekam medis)
 
 ---
@@ -76,7 +76,7 @@ Proyek ini dimulai dengan struktur per-layer (controller/service/repository dipi
 
 Refactor total ke **package-by-feature** dilakukan di ketiga layanan. Setiap modul sekarang mandiri — semua layer (entity, repository, DTO, service, controller) berada dalam satu folder fitur. Pola ini membuat onboarding fitur baru lebih cepat dan dampak perubahan lebih terprediksi. Trade-off: ada sedikit duplikasi struktur antar fitur, tapi kemudahan navigasi jauh menggantinya.
 
-Frontend juga mengikuti pola yang sama: `features/<nama>/` berisi service, types, pages, dan components untuk fitur tersebut, dengan `core/` menyimpan infrastruktur bersama (API client, auth context, theme, types).
+Frontend juga mengikuti pola yang sama: `features/<nama>/` berisi service, pages, dan components untuk fitur tersebut, dengan `core/` menyimpan infrastruktur bersama (API client, auth context, theme).
 
 ---
 
@@ -182,12 +182,12 @@ Frontend juga mengikuti pola yang sama: `features/<nama>/` berisi service, types
 
 ### 3. Frontend (React)
 
-**Tech:** React 19, TypeScript, Vite, Tailwind CSS 4, Axios, React Router 7, Lucide Icons
+**Tech:** React 19, JavaScript, Vite, Tailwind CSS 4, Axios, React Router 7, Lucide Icons
 
 **Tanggung Jawab:**
 
 - Antarmuka pengguna untuk tiga peran: Pasien, Dokter, Admin — masing-masing dengan navigasi dan halaman terpisah
-- Autentikasi: halaman login & register, persistensi sesi via localStorage, interceptor axios untuk JWT otomatis
+- Autentikasi: halaman login & register, access token hanya di memori + refresh token HttpOnly, interceptor axios untuk JWT otomatis
 - Alur booking appointment: wizard 4 langkah (pilih poli → dokter → jadwal → tanggal+keluhan) dengan validasi sisi klien (hari cocok, tanggal tidak masa lalu)
 - Halaman "Appointment Saya": daftar janji temu + status + nomor antrian + batalkan
 - Halaman profil pasien: lihat/edit data diri, tampilkan nomor rekam medis, mode "lengkapi profil" jika belum ada
@@ -218,8 +218,8 @@ Frontend juga mengikuti pola yang sama: `features/<nama>/` berisi service, types
 
 ## Dokumentasi API
 
-- **Swagger UI (backend):** `http://localhost:8080/swagger-ui.html` — tersedia via springdoc-openapi 2.7.0, semua endpoint terdokumentasi dengan anotasi `@Operation`, `@ApiResponse`, dan `@Tag`
-- **FastAPI Docs (ML service):** `http://localhost:8001/docs` — Swagger UI bawaan FastAPI, endpoint `/predict/osteoporosis` terdokumentasi dengan Pydantic schema
+- **Swagger UI (backend):** nonaktif secara default. Untuk development jalankan dengan `SWAGGER_ENABLED=true`, lalu buka `http://localhost:8080/swagger-ui.html`.
+- **FastAPI Docs (ML/chatbot):** nonaktif secara default. Untuk development jalankan dengan `ENABLE_DOCS=true`; di production dokumentasi tidak boleh diekspos.
 - **Insomnia/Postman collection:** `medikasentosa/Insomnia_2026-07-24.yaml` (Fase 1, 47 request) + `medikasentosa/Insomnia2_2026-07-24.yaml` (Fase 2-3, 42 request) — lengkap dengan dokumentasi tiap endpoint
 
 ---
@@ -230,7 +230,7 @@ Frontend juga mengikuti pola yang sama: `features/<nama>/` berisi service, types
 
 Integration test tersedia (`MedikasentosaApplicationTests.java`) tapi belum menguji skenario database nyata.
 
-Frontend: TypeScript `tsc --noEmit` 0 errors, build `npm run build` sukses.
+Frontend: Vitest 7 tests + build `npm run build` sukses.
 
 ---
 
@@ -315,7 +315,7 @@ Frontend: TypeScript `tsc --noEmit` 0 errors, build `npm run build` sukses.
 | Kategori | Digunakan Saat Ini | Roadmap (belum diimplementasi) |
 |----------|-------------------|-------------------------------|
 | **Backend** | Java 21, Spring Boot 4.1.0, Spring Security, Spring Data JPA, springdoc-openapi 2.7.0 | Spring Boot Actuator, Redis caching |
-| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS 4, Axios, React Router 7, Lucide Icons | — |
+| **Frontend** | React 19, JavaScript, Vite, Tailwind CSS 4, Axios, React Router 7, Lucide Icons | — |
 | **ML Service** | Python 3.10, FastAPI, TensorFlow 2.x, OpenCV, NumPy, Pydantic | GPU inference, model serving (TFLite) |
 | **Database** | PostgreSQL | — |
 | **Testing** | JUnit 5, Mockito (111 tests, 20 test files) | Playwright (E2E), integration test, coverage report |
@@ -350,24 +350,26 @@ Portofolio/
 │       │   └── screening/          # entity, repository, dto, service, controller
 │       └── shared/                 # config, controller, dto, exception, security, seed
 │
-├── hospital-frontend/              # Frontend — React + TypeScript
+├── hospital-frontendjs/            # Frontend aktif — React + JavaScript
 │   └── src/
-│       ├── core/                   # api/client, context/AuthContext, theme, types
-│       ├── data/                   # layanan.ts (shared data)
+│       ├── core/                   # api/client, context/AuthContext, theme
+│       ├── data/                   # layanan.js (shared data)
 │       ├── features/               # Package-by-feature
-│       │   ├── admin/              # pages (7 halaman), services, types
-│       │   ├── appointment/        # pages, components, services, types
+│       │   ├── admin/              # pages (7 halaman), services
+│       │   ├── appointment/        # pages, components, services
 │       │   ├── auth/               # pages, services
-│       │   ├── dokter/             # components, services, types
+│       │   ├── dokter/             # components, services
 │       │   ├── dokterpanel/        # pages, services
-│       │   ├── jadwal/             # pages, components, services, types
-│       │   ├── pasien/             # pages, services, types
-│       │   ├── poli/               # components, services, types
-│       │   ├── rekammedis/         # pages, components, services, types
-│       │   └── screening/          # pages, components, services, types
+│       │   ├── jadwal/             # pages, components, services
+│       │   ├── pasien/             # pages, services
+│       │   ├── poli/               # components, services
+│       │   ├── rekammedis/         # pages, components, services
+│       │   └── screening/          # pages, components, services
 │       ├── pages/                  # Home, Layanan, TentangKami, Kontak
 │       ├── components/             # Layout, Navbar, Footer, home/, admin/, dokter/
 │       └── routes/                 # AppRoutes, ProtectedRoute, AdminRoute, DokterRoute
+│
+├── hospital-frontend/              # Arsip versi TypeScript lama
 │
 ├── ml-service/                     # ML Service — FastAPI + TensorFlow
 │   ├── app/
@@ -492,9 +494,9 @@ docker compose ps
 
 # 4. Akses
 #    Frontend:     http://localhost:5173
-#    Swagger API:  http://localhost:8080/swagger-ui/index.html
-#    Grafana:      http://localhost:3000 (admin/admin)
+#    Grafana:      http://localhost:3000 (password dari GRAFANA_PASSWORD)
 #    Prometheus:   http://localhost:9090
+#    Swagger:      nonaktif default (SWAGGER_ENABLED=true untuk development)
 ```
 
 > **Offline mode:** Setelah `./setup.sh` selesai, semua dependency tersimpan di Docker layer cache. Rebuild selanjutnya (`docker compose build`) tidak butuh internet.
@@ -536,7 +538,7 @@ Pipeline otomatis jalan setiap **push** ke `main`/`develop` dan **pull request**
 |-----|---------------|
 | **backend-test** | `./gradlew test` — 119 unit tests (Java 21, PostgreSQL) |
 | **ml-service-check** | Python imports, dependencies OK (model tidak di-load) |
-| **frontend-check** | `tsc --noEmit` + `npm run build` |
+| **frontend-check** | `npm test` + `npm run build` |
 | **docker-build** | Build semua Docker image (setelah 3 job sukses) |
 
 ### Cara trigger
@@ -590,14 +592,17 @@ Backend berjalan di `http://localhost:8080`.
 | `spring.datasource.username` | User database | `core` |
 | `spring.datasource.password` | Password database | _(rahasia)_ |
 | `app.jwt.secret` | Secret key JWT | _(rahasia, minimal 32 karakter)_ |
-| `app.jwt.expiration-ms` | Masa berlaku token (ms) | `86400000` (24 jam) |
+| `app.jwt.expiration-ms` | Masa berlaku access token (ms) | `900000` (15 menit) |
+| `app.jwt.refresh-expiration-ms` | Masa berlaku refresh token (ms) | `604800000` (7 hari) |
 | `app.fastapi.url` | URL ML service | `http://localhost:8001` |
 
-Akun test (seed data, 20 users):
-- Admin: `admin@medikasentosa.id` / `arie12345`
-- Dokter: `ahmad.fauzi@medika.id` / `arie12345`
-- Pasien: `budi.santoso@gmail.com` / `arie12345`
-- Semua password: `arie12345`
+Akun demo (seed data, 20 users):
+
+- Password setiap akun dibuat **acak dan unik** saat seeding; tidak ada
+  password default yang dibagikan di repo.
+- Kredensial lokal hanya disimpan di `CREDENTIALS.md` (di-gitignore).
+- Jangan menjalankan `seed-data.sql` di production. Rotasi seluruh kredensial
+  sebelum deployment bersama.
 
 ### 3. ML Service (FastAPI)
 
@@ -614,7 +619,7 @@ ML service berjalan di `http://localhost:8001`.
 ### 4. Frontend (React)
 
 ```bash
-cd hospital-frontend
+cd hospital-frontendjs
 npm install
 npm run dev
 ```
@@ -625,10 +630,12 @@ Frontend berjalan di `http://localhost:5173`.
 
 ### 5. Verifikasi
 
-- Buka `http://localhost:8080/swagger-ui.html` — Swagger UI backend
-- Buka `http://localhost:8001/docs` — FastAPI docs ML service
 - Buka `http://localhost:5173` — Frontend
-- Login admin: `admin@medikasentosa.id` / `admin123`
+- Swagger UI backend nonaktif secara default; nyalakan hanya untuk development
+  dengan `SWAGGER_ENABLED=true`.
+- Dokumentasi FastAPI ML/chatbot juga nonaktif secara default (`ENABLE_DOCS=true`
+  hanya untuk development).
+- Kredensial admin awal dibuat dari `ADMIN_PASSWORD` (wajib di production).
 
 ---
 

@@ -201,16 +201,16 @@ Apa risiko jika endpoint publik `GET /api/poli` mengembalikan poli yang sudah di
 
 ---
 
-## Bagian C: Frontend (React + TypeScript)
+## Bagian C: Frontend (React + JavaScript)
 
 ### Pertanyaan 11 — Keamanan Token di localStorage
 
 **Konteks:**
-Di `AuthContext.tsx` (baris 45-94):
-```typescript
-const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
+Di `AuthContext.jsx` (baris 45-94):
+```javascript
+const [token, setToken] = useState(() => localStorage.getItem("token"));
 
-const login = (newToken: string, newUser: User) => {
+const login = (newToken, newUser) => {
     localStorage.setItem("token", newToken);
     localStorage.setItem("user", JSON.stringify(newUser));
 };
@@ -224,8 +224,8 @@ JWT token disimpan di `localStorage`. Apa kerentanan keamanan utama dari pendeka
 ### Pertanyaan 12 — Route Guard Bypass
 
 **Konteks:**
-`AdminRoute.tsx` mengecek role di frontend:
-```typescript
+`AdminRoute.jsx` mengecek role di frontend:
+```javascript
 if (user?.role !== "ADMIN") return <Navigate to="/" replace />;
 ```
 

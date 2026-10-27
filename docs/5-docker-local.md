@@ -27,12 +27,17 @@ cd portofolio-belajar
 cp .env.example .env
 ```
 
-Edit `.env` isi password production (atau pakai default untuk development):
+Edit `.env` dan isi seluruh nilai `CHANGE_ME` dengan nilai acak. Jangan memakai
+password default. Contoh membuat secret:
 
-```env
-POSTGRES_PASSWORD=dev_password_change_me
-JWT_SECRET=dev_jwt_secret_change_me_in_production_use_openssl_rand_base64_48
+```bash
+openssl rand -base64 36
+openssl rand -hex 32
 ```
+
+Compose akan menolak start bila `POSTGRES_PASSWORD`, `REDIS_PASSWORD`,
+`JWT_SECRET`, `ML_INTERNAL_API_KEY`, `CHATBOT_INTERNAL_API_KEY`, atau
+`GRAFANA_PASSWORD` masih kosong.
 
 ### 3. Build & Jalankan
 
@@ -68,34 +73,37 @@ Harusnya semua `Up`:
 
 ```
 NAME               STATUS              PORTS
-medika-postgres    Up (healthy)        0.0.0.0:5432->5432/tcp
-medika-redis       Up (healthy)        0.0.0.0:6379->6379/tcp
-medika-backend     Up (healthy)        0.0.0.0:8080->8080/tcp
-medika-ml-service  Up                  0.0.0.0:8001->8001/tcp
-medika-chatbot     Up                  0.0.0.0:8002->8002/tcp
+medika-postgres    Up (healthy)        127.0.0.1:5432->5432/tcp
+medika-redis       Up (healthy)        127.0.0.1:6379->6379/tcp
+medika-backend     Up (healthy)        127.0.0.1:8080->8080/tcp
+medika-ml-service  Up                  127.0.0.1:8001->8001/tcp
+medika-chatbot     Up                  127.0.0.1:8002->8002/tcp
 medika-frontend    Up                  0.0.0.0:5173->80/tcp
-medika-prometheus  Up                  0.0.0.0:9090->9090/tcp
-medika-grafana     Up                  0.0.0.0:3000->3000/tcp
+medika-prometheus  Up                  127.0.0.1:9090->9090/tcp
+medika-grafana     Up                  127.0.0.1:3000->3000/tcp
 ```
+
+Port database, Redis, backend, ML, chatbot, dan monitoring hanya di-bind ke
+loopback agar tidak dapat diakses langsung dari jaringan luar.
 
 ### 5. Akses Aplikasi
 
 | Service | URL | Keterangan |
 |---|---|---|
 | **Frontend** | http://localhost:5173 | Aplikasi utama |
-| **Backend API** | http://localhost:8080 | REST API |
-| **Swagger UI** | http://localhost:8080/swagger-ui/index.html | API docs |
-| **ML Service** | http://localhost:8001/health | Osteoporosis AI |
-| **Chatbot** | http://localhost:8002/chat/health | Senta AI |
-| **Prometheus** | http://localhost:9090 | Metrics |
-| **Grafana** | http://localhost:3000 | Dashboard (admin/admin) |
+| **Backend API** | http://localhost:8080 | REST API (loopback) |
+| **Swagger UI** | nonaktif default | Nyalakan dengan `SWAGGER_ENABLED=true` (development saja) |
+| **ML Service** | http://localhost:8001/health | Internal, wajib `X-Internal-API-Key` |
+| **Chatbot** | http://localhost:8002/chat/health | Internal, wajib `X-Internal-API-Key` |
+| **Prometheus** | http://localhost:9090 | Loopback |
+| **Grafana** | http://localhost:3000 | Loopback; password dari `GRAFANA_PASSWORD` |
 
-### 6. Login Default
+### 6. Login Demo
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | admin@medikasentosa.id | arie12345 |
-| (Seed data lain otomatis dibuat oleh DataSeeder) | | |
+Password akun demo dibuat acak saat seeding dan hanya tercatat di
+`CREDENTIALS.md` (di-gitignore). Tidak ada password default yang dibagikan di
+repo. Untuk production, buat akun admin melalui `ADMIN_PASSWORD` dan jangan
+menjalankan `seed-data.sql`.
 
 ---
 

@@ -73,7 +73,7 @@ fungsional. Bagian 4 memuat kebutuhan non-fungsional.
 
 ### 2.1 Perspektif Produk
 RS Medika Sentosa adalah sistem mandiri berbasis arsitektur tiga layanan:
-- **Frontend** (React + TypeScript) — antarmuka pengguna
+- **Frontend** (React + JavaScript) — antarmuka pengguna
 - **Backend** (Spring Boot) — logika bisnis, autentikasi, REST API
 - **ML Service** (FastAPI + TensorFlow) — inferensi model osteoporosis
 
