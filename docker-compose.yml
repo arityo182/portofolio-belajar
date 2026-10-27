@@ -75,7 +75,7 @@ services:
     container_name: medika-backend
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -194,7 +194,7 @@ services:
     container_name: medika-frontend
     restart: unless-stopped
     ports:
-      - "5173:80"
+      - "${FRONTEND_PORT:-5173}:80"
     security_opt:
       - no-new-privileges:true
     cap_drop:

@@ -14,8 +14,8 @@
 |---|---:|---:|---:|
 | P1 — Demo blocker | 19 | 19 | 0 |
 | P2 — Gangguan alur utama | 12 | 12 | 0 |
-| P3 — Minor/lingkungan | 7 | 2 | 5 |
-| **Total** | **38** | **33** | **5** |
+| P3 — Minor/lingkungan | 7 | 4 | 3 |
+| **Total** | **38** | **35** | **3** |
 
 Temuan paling kritis yang ditemukan saat verifikasi runtime (bukan hanya review statis):
 
@@ -315,8 +315,8 @@ Setelah perbaikan, seluruh service berhasil dijalankan dan alur utama diuji end-
 |---|---|---|---|---|
 | Residual | Frontend | `hospital-frontendjs/src/features/**` | 32 warning `react-hooks/set-state-in-effect` pada pola fetch-on-mount | Diturunkan ke warning; bukan bug fungsional, kandidat refactor performa |
 | Residual | Integrasi | `chatbot-service` | Inferensi LLM belum diuji penuh karena vLLM tidak berjalan di lingkungan audit | Fallback & health sudah diverifikasi; siapkan vLLM di GPU/host sebelum demo |
-| Residual | Infrastruktur | `docker-compose.yml`, `deploy/*.yml` | Stack penuh tidak bisa bind port 8080/80 karena proyek lain (`koperasi-*`) sedang memakai port tersebut | Semua service diuji individual; jalankan compose di host/port bersih |
-| Residual | Frontend | `hospital-frontendjs` | Bundle utama 657 kB (>500 kB warning) | Pertimbangkan code splitting/dynamic import untuk halaman admin |
+| Fixed | Infrastruktur | `docker-compose.yml`, `.env.example` | Port host 8080/80 bentrok dengan proyek lain | Port dibuat configurable: `BACKEND_PORT` dan `FRONTEND_PORT`; stack minimal diuji di 8088/5174 |
+| Fixed | Frontend | `hospital-frontendjs/src/routes/AppRoutes.jsx` | Bundle utama 657 kB (>500 kB warning) | Route-level `React.lazy` + `Suspense`; bundle utama turun ke ~281 kB (lokal) / ~320 kB (Docker) |
 | Residual | Billing | `.../billing/service/BillingService.java` | Tarif konsultasi/lab/radiologi masih konstanta internal (belum master tarif) | Dokumentasikan sebagai tarif default; tambahkan master tarif bila diperlukan |
 | Fixed | Frontend | `hospital-frontendjs/eslint.config.js` | Aturan lint React Compiler memblokir build | Dikonfigurasi sebagai warning dengan justifikasi |
 | Fixed | Chatbot | `chatbot-service/requirements.txt` | Dependency NumPy tidak dipin | `numpy<2.0` |
@@ -388,6 +388,12 @@ Chatbot menggunakan REST sinkron (`POST /api/chat/message`, `POST /api/chat/publ
 | Chatbot saat vLLM mati | `200` fallback “Senta sedang tidak tersedia” |
 | WebSocket pasien `/topic/pasien/13` | Menerima `APPOINTMENT_CREATED` |
 | WebSocket dokter `/topic/dokter/1` | Menerima `APPOINTMENT_CREATED` |
+| Frontend via Nginx (`http://127.0.0.1:5174`) | HTML `200`, asset utama `200` |
+| Login & API lewat proxy Nginx | `200` (CORS localhost + 127.0.0.1) |
+| Booking lewat proxy Nginx | `201`, antrian terisi |
+| WebSocket lewat proxy Nginx | Menerima `APPOINTMENT_CREATED` |
+| Chat saat chatbot dimatikan | `200` fallback “Senta sedang tidak tersedia” |
+| Bundle utama setelah code splitting | ~281 kB (lokal), tanpa warning >500 kB |
 
 ### 8.3 Perintah verifikasi utama
 
@@ -408,7 +414,7 @@ booking → antrian → panel dokter → pemeriksaan → rekam medis/resep/lab/r
 **Prasyarat sebelum demo/produksi:**
 
 1. Jalankan **vLLM** dan pastikan `VLLM_BASE_URL` + `VLLM_API_KEY` benar agar chatbot menghasilkan jawaban LLM (bukan fallback).
-2. Jalankan stack Compose di host dengan **port 8080 dan 80 bebas** (saat audit, port tersebut dipakai proyek lain).
+2. Jalankan stack Compose di host dengan port bebas. Jika 8080/80 sudah dipakai, set `BACKEND_PORT` dan `FRONTEND_PORT` di `.env` (mis. 8088/5174) lalu sesuaikan `CORS_ALLOWED_ORIGINS`.
 3. Pastikan `.env` produksi berisi seluruh secret wajib (`JWT_SECRET`, `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `ML_INTERNAL_API_KEY`, `CHATBOT_INTERNAL_API_KEY`, `VLLM_API_KEY`, `CORS_ALLOWED_ORIGINS`).
 4. Terapkan residual risk keamanan dari `docs/security-audit.md` (TLS, enkripsi at-rest, verifikasi pembayaran, rate limit terdistribusi).
 5. Ganti tarif default billing dengan master tarif bila rumah sakit membutuhkan tarif per poli/layanan yang berbeda.

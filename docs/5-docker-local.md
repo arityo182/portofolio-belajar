@@ -9,6 +9,7 @@
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) / Docker Engine + Docker Compose v2
 - Minimal **8 GB RAM** (8 service jalan bersamaan)
 - Port kosong: `5432`, `6379`, `8080`, `8001`, `8002`, `5173`, `9090`, `3000`
+  (atau set `BACKEND_PORT`/`FRONTEND_PORT` di `.env` bila port default terpakai)
 
 ---
 
@@ -90,8 +91,8 @@ loopback agar tidak dapat diakses langsung dari jaringan luar.
 
 | Service | URL | Keterangan |
 |---|---|---|
-| **Frontend** | http://localhost:5173 | Aplikasi utama |
-| **Backend API** | http://localhost:8080 | REST API (loopback) |
+| **Frontend** | http://localhost:5173 (`FRONTEND_PORT`) | Aplikasi utama |
+| **Backend API** | http://localhost:8080 (`BACKEND_PORT`) | REST API (loopback) |
 | **Swagger UI** | nonaktif default | Nyalakan dengan `SWAGGER_ENABLED=true` (development saja) |
 | **ML Service** | http://localhost:8001/health | Internal, wajib `X-Internal-API-Key` |
 | **Chatbot** | http://localhost:8002/chat/health | Internal, wajib `X-Internal-API-Key` |
