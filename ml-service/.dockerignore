@@ -1,7 +1,11 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 .git/
 *.md
 .gitignore
 test_preprocessing.py
+.env
+.env.*
+CREDENTIALS.md

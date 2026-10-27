@@ -12,8 +12,10 @@ WORKDIR /app
 
 COPY . .
 
-# Non-root user
-RUN adduser --disabled-password --gecos "" botuser && \
+# Non-root user. Buat direktori Chroma lebih dulu agar named volume yang
+# di-mount mewarisi ownership botuser (bukan root), sehingga SQLite bisa menulis.
+RUN mkdir -p /app/chroma_db && \
+    adduser --disabled-password --gecos "" botuser && \
     chown -R botuser:botuser /app
 USER botuser
 

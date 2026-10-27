@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    token_version INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -137,6 +138,7 @@ CREATE TABLE IF NOT EXISTS screenings (
     user_id BIGINT NOT NULL REFERENCES users(id),
     label VARCHAR(255) NOT NULL,
     confidence DOUBLE PRECISION NOT NULL,
+    probabilities TEXT,
     risk TEXT,
     gradcam_image TEXT,
     latency_ms BIGINT,
@@ -182,6 +184,7 @@ CREATE TABLE IF NOT EXISTS jadwal_operasi (
 CREATE TABLE IF NOT EXISTS billing (
     id BIGSERIAL PRIMARY KEY,
     pasien_id BIGINT REFERENCES pasien(id),
+    appointment_id BIGINT UNIQUE REFERENCES appointment(id),
     total_harga NUMERIC(12,2) NOT NULL,
     status VARCHAR(20) NOT NULL,
     tanggal_tagihan DATE NOT NULL,

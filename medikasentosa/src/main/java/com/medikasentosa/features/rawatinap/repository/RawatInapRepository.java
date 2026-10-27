@@ -19,6 +19,9 @@ public interface RawatInapRepository extends JpaRepository<RawatInap, Long> {
      */
     List<RawatInap> findByPasienId(Long pasienId);
 
+    /** Apakah dokter pernah menangani pasien ini pada rawat inap. */
+    boolean existsByPasienIdAndDokterId(Long pasienId, Long dokterId);
+
     /**
      * Mengambil rawat inap dengan status tertentu.
      */

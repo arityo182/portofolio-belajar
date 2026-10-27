@@ -6,3 +6,6 @@ bin/
 .gitignore
 .gitattributes
 .git/
+.env
+.env.*
+CREDENTIALS.md

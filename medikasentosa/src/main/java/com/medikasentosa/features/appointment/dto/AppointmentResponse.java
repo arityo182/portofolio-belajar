@@ -12,8 +12,8 @@ import java.time.LocalTime;
  * dikembalikan ke klien. Menggabungkan informasi pasien, dokter, poli, dan jadwal
  * agar mudah ditampilkan tanpa perlu request tambahan.
  * <p>
- * Field {@code nomorAntrian} bernilai {@code null} bila antrian untuk appointment
- * ini belum digenerate.
+ * Field {@code nomorAntrian} dan {@code antrianId} bernilai {@code null} bila
+ * antrian untuk appointment ini belum digenerate.
  *
  * @author Ari
  * @since 1.0.0
@@ -33,5 +33,6 @@ public record AppointmentResponse(
         @JsonFormat(pattern = "yyyy-MM-dd") LocalDate tanggal,
         StatusAppointment status,
         String keluhan,
-        Integer nomorAntrian) {
+        Integer nomorAntrian,
+        Long antrianId) {
 }

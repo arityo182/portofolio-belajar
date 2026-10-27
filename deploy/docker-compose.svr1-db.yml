@@ -1,7 +1,8 @@
 # ============================================
 # SERVER 1 — Database + Cache
-# IP: 10.0.1.10 (contoh)
+# IP: 10.0.1.10 (contoh, sesuaikan)
 # ============================================
+# Port hanya di-bind ke IP privat server ini agar tidak terbuka ke internet.
 services:
   postgres:
     image: postgres:16-alpine
@@ -9,13 +10,15 @@ services:
     container_name: prod-postgres
     restart: always
     ports:
-      - "0.0.0.0:5432:5432"
+      - "10.0.1.10:5432:5432"
     environment:
       POSTGRES_DB: medika_sentosa
       POSTGRES_USER: core
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib diisi}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U core -d medika_sentosa"]
       interval: 5s
@@ -28,11 +31,21 @@ services:
     container_name: prod-redis
     restart: always
     ports:
-      - "0.0.0.0:6379:6379"
+      - "10.0.1.10:6379:6379"
+    command:
+      - "redis-server"
+      - "--requirepass"
+      - "${REDIS_PASSWORD:?REDIS_PASSWORD wajib diisi}"
+      - "--appendonly"
+      - "yes"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD wajib diisi}
     volumes:
       - redis_data:/data
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
       interval: 5s
       timeout: 5s
       retries: 5

@@ -3,6 +3,7 @@ package com.medikasentosa.features.pasien.controller;
 import com.medikasentosa.features.pasien.dto.PasienRequest;
 import com.medikasentosa.features.pasien.dto.PasienResponse;
 import com.medikasentosa.features.pasien.service.PasienService;
+import com.medikasentosa.shared.security.AuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,9 +29,11 @@ import java.util.List;
 public class PasienController {
 
     private final PasienService pasienService;
+    private final AuthorizationService authorization;
 
-    public PasienController(PasienService pasienService) {
+    public PasienController(PasienService pasienService, AuthorizationService authorization) {
         this.pasienService = pasienService;
+        this.authorization = authorization;
     }
 
     /**
@@ -38,8 +42,9 @@ public class PasienController {
      * @return daftar semua pasien
      */
     @GetMapping
-    @Operation(summary = "Ambil semua pasien",
-               description = "Mengembalikan seluruh daftar pasien yang tersimpan.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Ambil semua pasien (admin)",
+               description = "Mengembalikan seluruh daftar pasien yang tersimpan. Khusus admin.")
     @ApiResponse(responseCode = "200", description = "Daftar pasien berhasil diambil")
     public List<PasienResponse> getAll() {
         return pasienService.getAll();
@@ -59,6 +64,7 @@ public class PasienController {
         @ApiResponse(responseCode = "404", description = "Pasien tidak ditemukan")
     })
     public PasienResponse getById(@PathVariable Long id) {
+        authorization.requirePasienAccess(id);
         return pasienService.getById(id);
     }
 
@@ -76,6 +82,7 @@ public class PasienController {
         @ApiResponse(responseCode = "404", description = "Pasien tidak ditemukan")
     })
     public PasienResponse getByUserId(@PathVariable Long userId) {
+        authorization.requirePasienOfUserAccess(userId);
         return pasienService.getByUserId(userId);
     }
 
@@ -95,6 +102,7 @@ public class PasienController {
         @ApiResponse(responseCode = "409", description = "User sudah terdaftar sebagai pasien")
     })
     public ResponseEntity<PasienResponse> create(@Valid @RequestBody PasienRequest request) {
+        authorization.requirePasienCreationForUser(request.userId());
         PasienResponse response = pasienService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -115,6 +123,7 @@ public class PasienController {
         @ApiResponse(responseCode = "404", description = "Pasien tidak ditemukan")
     })
     public PasienResponse update(@PathVariable Long id, @Valid @RequestBody PasienRequest request) {
+        authorization.requirePasienWrite(id);
         return pasienService.update(id, request);
     }
 }

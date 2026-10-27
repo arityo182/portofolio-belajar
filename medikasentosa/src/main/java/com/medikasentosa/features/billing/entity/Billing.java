@@ -1,5 +1,6 @@
 package com.medikasentosa.features.billing.entity;
 
+import com.medikasentosa.features.appointment.entity.Appointment;
 import com.medikasentosa.features.pasien.entity.Pasien;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,6 +31,14 @@ public class Billing {
     @ManyToOne
     @JoinColumn(name = "pasien_id")
     private Pasien pasien;
+
+    /**
+     * Appointment sumber tagihan. Unik agar satu appointment tidak dapat
+     * menghasilkan lebih dari satu billing (mencegah tagihan ganda).
+     */
+    @ManyToOne
+    @JoinColumn(name = "appointment_id", unique = true)
+    private Appointment appointment;
 
     /** Total tagihan setelah semua item dijumlahkan */
     @Column(nullable = false, precision = 12, scale = 2)

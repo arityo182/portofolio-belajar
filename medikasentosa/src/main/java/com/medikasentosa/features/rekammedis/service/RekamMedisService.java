@@ -9,6 +9,7 @@ import com.medikasentosa.features.rekammedis.entity.RekamMedis;
 import com.medikasentosa.features.rekammedis.repository.RekamMedisRepository;
 import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import com.medikasentosa.shared.notification.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,11 +32,14 @@ public class RekamMedisService {
 
     private final RekamMedisRepository rekamMedisRepository;
     private final AppointmentRepository appointmentRepository;
+    private final NotificationService notificationService;
 
     public RekamMedisService(RekamMedisRepository rekamMedisRepository,
-                             AppointmentRepository appointmentRepository) {
+                             AppointmentRepository appointmentRepository,
+                             NotificationService notificationService) {
         this.rekamMedisRepository = rekamMedisRepository;
         this.appointmentRepository = appointmentRepository;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -82,6 +86,13 @@ public class RekamMedisService {
         // 5. Tandai appointment SELESAI
         appointment.setStatus(StatusAppointment.SELESAI);
         appointmentRepository.save(appointment);
+
+        // 6. Beri tahu pasien & panel dokter bahwa pemeriksaan selesai.
+        notificationService.broadcastStatusAppointment(
+                appointment.getId(),
+                appointment.getPasien().getId(),
+                appointment.getDokter().getId(),
+                StatusAppointment.SELESAI.name());
 
         return toResponse(rekamMedis);
     }

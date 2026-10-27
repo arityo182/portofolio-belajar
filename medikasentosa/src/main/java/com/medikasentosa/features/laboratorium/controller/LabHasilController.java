@@ -2,7 +2,9 @@ package com.medikasentosa.features.laboratorium.controller;
 
 import com.medikasentosa.features.laboratorium.dto.LabHasilRequest;
 import com.medikasentosa.features.laboratorium.dto.LabHasilResponse;
+import com.medikasentosa.shared.audit.AuditLogger;
 import com.medikasentosa.features.laboratorium.service.LabHasilService;
+import com.medikasentosa.shared.security.AuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -24,9 +26,15 @@ import org.springframework.web.bind.annotation.*;
 public class LabHasilController {
 
     private final LabHasilService labHasilService;
+    private final AuthorizationService authorization;
+    private final AuditLogger auditLogger;
 
-    public LabHasilController(LabHasilService labHasilService) {
+    public LabHasilController(LabHasilService labHasilService,
+                              AuthorizationService authorization,
+                              AuditLogger auditLogger) {
         this.labHasilService = labHasilService;
+        this.authorization = authorization;
+        this.auditLogger = auditLogger;
     }
 
     @GetMapping("/order/{labOrderId}")
@@ -37,6 +45,8 @@ public class LabHasilController {
         @ApiResponse(responseCode = "404", description = "Hasil belum tersedia")
     })
     public LabHasilResponse getByLabOrder(@PathVariable Long labOrderId) {
+        authorization.requireLabOrderAccess(labOrderId);
+        auditLogger.record("READ", "LAB_HASIL", labOrderId);
         return labHasilService.getByLabOrder(labOrderId);
     }
 
@@ -50,6 +60,9 @@ public class LabHasilController {
         @ApiResponse(responseCode = "409", description = "Order sudah memiliki hasil")
     })
     public ResponseEntity<LabHasilResponse> create(@Valid @RequestBody LabHasilRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(labHasilService.create(request));
+        authorization.requireLabOrderWrite(request.labOrderId());
+        LabHasilResponse response = labHasilService.create(request);
+        auditLogger.record("CREATE", "LAB_HASIL", request.labOrderId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

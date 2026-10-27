@@ -2,6 +2,7 @@ package com.medikasentosa.features.billing.controller;
 
 import com.medikasentosa.features.billing.dto.*;
 import com.medikasentosa.features.billing.service.BillingService;
+import com.medikasentosa.shared.security.AuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -24,19 +25,40 @@ import java.util.List;
 public class BillingController {
 
     private final BillingService service;
-    public BillingController(BillingService s) { this.service = s; }
+    private final AuthorizationService authorization;
+
+    public BillingController(BillingService s, AuthorizationService authorization) {
+        this.service = s;
+        this.authorization = authorization;
+    }
 
     @GetMapping
-    @Operation(summary = "Semua billing")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Semua billing (admin)")
     public List<BillingResponse> getAll() { return service.getAll(); }
 
     @GetMapping("/{id}")
     @Operation(summary = "Detail billing")
-    public BillingResponse getById(@PathVariable Long id) { return service.getById(id); }
+    public BillingResponse getById(@PathVariable Long id) {
+        authorization.requireBillingAccess(id);
+        return service.getById(id);
+    }
 
     @GetMapping("/pasien/{pasienId}")
     @Operation(summary = "Billing by pasien")
-    public List<BillingResponse> getByPasien(@PathVariable Long pasienId) { return service.getByPasien(pasienId); }
+    public List<BillingResponse> getByPasien(@PathVariable Long pasienId) {
+        authorization.requireBillingOfPasien(pasienId);
+        return service.getByPasien(pasienId);
+    }
+
+    @GetMapping("/appointment/{appointmentId}")
+    @Operation(summary = "Billing by appointment",
+               description = "Mengembalikan billing milik appointment tertentu. Pasien hanya "
+                       + "dapat mengakses appointment miliknya.")
+    public BillingResponse getByAppointment(@PathVariable Long appointmentId) {
+        authorization.requireAppointmentAccess(appointmentId);
+        return service.getByAppointment(appointmentId);
+    }
 
     @PostMapping("/generate/appointment/{appointmentId}")
     @PreAuthorize("hasRole('ADMIN')")

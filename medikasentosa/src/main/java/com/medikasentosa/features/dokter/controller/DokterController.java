@@ -3,6 +3,7 @@ package com.medikasentosa.features.dokter.controller;
 import com.medikasentosa.features.dokter.dto.DokterRequest;
 import com.medikasentosa.features.dokter.dto.DokterResponse;
 import com.medikasentosa.features.dokter.service.DokterService;
+import com.medikasentosa.shared.security.AuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,9 +29,11 @@ import java.util.List;
 public class DokterController {
 
     private final DokterService dokterService;
+    private final AuthorizationService authorization;
 
-    public DokterController(DokterService dokterService) {
+    public DokterController(DokterService dokterService, AuthorizationService authorization) {
         this.dokterService = dokterService;
+        this.authorization = authorization;
     }
 
     /**
@@ -76,6 +80,7 @@ public class DokterController {
         @ApiResponse(responseCode = "404", description = "Dokter tidak ditemukan")
     })
     public DokterResponse getByUserId(@PathVariable Long userId) {
+        authorization.requireSelfOrAdmin(userId);
         return dokterService.getByUserId(userId);
     }
 
@@ -103,7 +108,8 @@ public class DokterController {
      * @return data dokter yang berhasil dibuat (HTTP 201)
      */
     @PostMapping
-    @Operation(summary = "Buat dokter baru",
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Buat dokter baru (admin)",
                description = "Membuat profil dokter baru dan menyetel peran user menjadi DOKTER.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Dokter berhasil dibuat"),
@@ -124,7 +130,8 @@ public class DokterController {
      * @return data dokter setelah diperbarui
      */
     @PutMapping("/{id}")
-    @Operation(summary = "Perbarui dokter",
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Perbarui dokter (admin)",
                description = "Memperbarui data profil dokter berdasarkan ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Dokter berhasil diperbarui"),
@@ -142,7 +149,8 @@ public class DokterController {
      * @return respons kosong (HTTP 204 No Content)
      */
     @DeleteMapping("/{id}")
-    @Operation(summary = "Hapus dokter",
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Hapus dokter (admin)",
                description = "Menghapus data dokter berdasarkan ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Dokter berhasil dihapus"),

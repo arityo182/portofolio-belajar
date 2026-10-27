@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,24 +36,25 @@ public class PoliController {
     }
 
     /**
-     * Mengambil seluruh daftar poli yang tersimpan.
+     * Mengambil daftar poli aktif. Poli nonaktif hanya tersedia melalui
+     * endpoint admin {@code /api/admin/poli}.
      *
-     * @return daftar semua poli
+     * @return daftar poli aktif
      */
     @GetMapping
-    @Operation(summary = "Ambil semua poli",
-               description = "Mengembalikan seluruh daftar poli yang tersimpan.")
+    @Operation(summary = "Ambil semua poli aktif",
+               description = "Mengembalikan daftar poli yang masih aktif untuk konsumen publik.")
     @ApiResponse(responseCode = "200", description = "Daftar poli berhasil diambil")
     public List<PoliResponse> getAll() {
-        return poliService.getAll();
+        return poliService.getAllActive();
     }
 
     @GetMapping("/paginated")
-    @Operation(summary = "Ambil semua poli (paginated)",
-               description = "Mengembalikan daftar poli dengan pagination.")
+    @Operation(summary = "Ambil semua poli aktif (paginated)",
+               description = "Mengembalikan daftar poli aktif dengan pagination.")
     @ApiResponse(responseCode = "200", description = "Daftar poli berhasil diambil")
     public Page<PoliResponse> getAllPaginated(Pageable pageable) {
-        return poliService.getAll(pageable);
+        return poliService.getAllActive(pageable);
     }
 
     /**
@@ -79,7 +81,8 @@ public class PoliController {
      * @return data poli yang berhasil dibuat (HTTP 201)
      */
     @PostMapping
-    @Operation(summary = "Buat poli baru",
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Buat poli baru (admin)",
                description = "Membuat data poli baru dengan nama yang unik.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Poli berhasil dibuat"),
@@ -99,7 +102,8 @@ public class PoliController {
      * @return data poli setelah diperbarui
      */
     @PutMapping("/{id}")
-    @Operation(summary = "Perbarui poli",
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Perbarui poli (admin)",
                description = "Memperbarui nama dan deskripsi poli berdasarkan ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Poli berhasil diperbarui"),
@@ -117,7 +121,8 @@ public class PoliController {
      * @return respons kosong (HTTP 204 No Content)
      */
     @DeleteMapping("/{id}")
-    @Operation(summary = "Nonaktifkan poli",
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Nonaktifkan poli (admin)",
                description = "Menonaktifkan poli (soft delete) sehingga tidak lagi aktif.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Poli berhasil dinonaktifkan"),

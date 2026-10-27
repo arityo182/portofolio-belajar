@@ -1,6 +1,6 @@
 # ============================================
 # SERVER 2 — Backend Spring Boot
-# IP: 10.0.1.20 (contoh)
+# IP: 10.0.1.20 (contoh, sesuaikan)
 # ============================================
 services:
   backend:
@@ -11,19 +11,35 @@ services:
     container_name: prod-backend
     restart: always
     ports:
-      - "8080:8080"
+      - "10.0.1.20:8080:8080"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     environment:
+      SPRING_PROFILES_ACTIVE: production
       SPRING_DATASOURCE_URL: jdbc:postgresql://10.0.1.10:5432/medika_sentosa
       SPRING_DATASOURCE_USERNAME: core
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib diisi}
       SPRING_DATA_REDIS_HOST: 10.0.1.10
       SPRING_DATA_REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD wajib diisi}
       APP_FASTAPI_URL: http://10.0.1.30:8001
       APP_CHATBOT_URL: http://10.0.1.30:8002
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET wajib diisi}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-900000}
+      JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-604800000}
+      REFRESH_COOKIE_SECURE: "true"
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS wajib diisi}
+      ML_INTERNAL_API_KEY: ${ML_INTERNAL_API_KEY:?ML_INTERNAL_API_KEY wajib diisi}
+      CHATBOT_INTERNAL_API_KEY: ${CHATBOT_INTERNAL_API_KEY:?CHATBOT_INTERNAL_API_KEY wajib diisi}
+      # Wajib saat bootstrap admin awal; boleh dikosongkan setelah admin ada.
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      SWAGGER_ENABLED: "false"
       SPRING_CACHE_TYPE: simple
     depends_on: []
     healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:8080/swagger-ui/index.html || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 10

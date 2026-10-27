@@ -99,7 +99,7 @@ class AppointmentControllerIntegrationTest {
 
     @Test
     void bookingEndToEnd_shouldReturn201() {
-        var req = new AppointmentRequest(pasienId, jadwalId, LocalDate.of(2026, 7, 27), "Nyeri dada");
+        var req = new AppointmentRequest(pasienId, jadwalId, LocalDate.of(2026, 11, 2), "Nyeri dada");
         var r = rest.postForEntity(baseUrl + "/api/appointment",
                 new HttpEntity<>(req, auth(pasienToken)), String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -108,7 +108,7 @@ class AppointmentControllerIntegrationTest {
 
     @Test
     void bookingUnauthorized_shouldReturn403() {
-        var req = new AppointmentRequest(pasienId, jadwalId, LocalDate.of(2026, 7, 27), "Test");
+        var req = new AppointmentRequest(pasienId, jadwalId, LocalDate.of(2026, 11, 2), "Test");
         var r = rest.postForEntity(baseUrl + "/api/appointment", req, String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }

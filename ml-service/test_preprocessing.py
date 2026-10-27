@@ -1,7 +1,12 @@
+from pathlib import Path
+
 from app.preprocessing import preprocess
 
-# nama file persis, termasuk spasi dan huruf besar
-with open("/home/arie12345/Belajar/Portofolio/ml-service/models/Osteoporosis 1.JPEG", "rb") as f:
+# Path relatif terhadap file ini agar portabel di mesin/CI mana pun.
+MODEL_DIR = Path(__file__).resolve().parent / "models"
+IMAGE_PATH = MODEL_DIR / "Osteoporosis 1.JPEG"
+
+with open(IMAGE_PATH, "rb") as f:
     img_bytes = f.read()
 
 result = preprocess(img_bytes)

@@ -3,6 +3,7 @@ package com.medikasentosa.features.admin.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -12,7 +13,7 @@ import jakarta.validation.constraints.Size;
  * Berbeda dengan {@code DokterRequest}, DTO ini menyertakan kredensial akun
  * (nama, email, password) sehingga admin tidak perlu membuat user terpisah
  * terlebih dahulu. Backend akan membuat User(role=DOKTER) + profil Dokter
- * secara atomik.
+ * secara atomik. Password mengikuti kebijakan yang sama dengan registrasi.
  *
  * @author Ari
  * @since 1.0.0
@@ -25,7 +26,10 @@ public record DokterCreateRequest(
         @Email(message = "Format email tidak valid") String email,
 
         @NotBlank(message = "Password wajib diisi")
-        @Size(min = 6, message = "Password minimal 6 karakter") String password,
+        @Size(min = 12, max = 128, message = "Password minimal 12 karakter")
+        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$",
+                message = "Password harus mengandung minimal satu huruf dan satu angka")
+        String password,
 
         @NotNull(message = "Poli wajib diisi") Long poliId,
 

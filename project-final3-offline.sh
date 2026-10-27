@@ -7,7 +7,7 @@
 # ================================================
 # Template struktur project:
 #   - project-final3-backend/   (Spring Boot 4.x, Java 21, Gradle)
-#   - project-final3-frontend/  (React 19, Vite 8, Tailwind 4)
+#   - hospital-frontendjs/     (React 19, Vite 8, Tailwind 4, JavaScript)
 #   - project-final3-ml/        (FastAPI, TensorFlow, Python 3.10)
 #   - PostgreSQL 16 + Redis 7 (Docker)
 #   - DevSecOps tools           (Trivy, Hadolint, Gitleaks, act, OWASP)
@@ -113,15 +113,15 @@ fi
 echo ""
 echo "[3/6] Frontend — npm packages"
 
-if [ -f "$PROJECT_DIR/project-final3-frontend/package.json" ] || [ -f "$PROJECT_DIR/hospital-frontend/package.json" ]; then
-  if [ -f "$PROJECT_DIR/project-final3-frontend/package.json" ]; then
-    FRONTEND_DIR="$PROJECT_DIR/project-final3-frontend"
+if [ -f "$PROJECT_DIR/hospital-frontendjs/package.json" ] || [ -f "$PROJECT_DIR/project-final3-frontend/package.json" ]; then
+  if [ -f "$PROJECT_DIR/hospital-frontendjs/package.json" ]; then
+    FRONTEND_DIR="$PROJECT_DIR/hospital-frontendjs"
   else
-    FRONTEND_DIR="$PROJECT_DIR/hospital-frontend"
+    FRONTEND_DIR="$PROJECT_DIR/project-final3-frontend"
   fi
 
   cd "$FRONTEND_DIR"
-  echo "  React 19 · Vite 8 · Tailwind 4 · TypeScript 5.9"
+  echo "  React 19 · Vite 8 · Tailwind 4 · JavaScript"
   echo "  React Router 7.18 · Axios 1.18 · Lucide 1.21"
   echo "  @tanstack/react-query (v5) · dayjs · sonner"
   echo ""
@@ -145,7 +145,7 @@ if [ -f "$PROJECT_DIR/project-final3-frontend/package.json" ] || [ -f "$PROJECT_
   cd "$PROJECT_DIR"
   echo "✅ npm packages selesai."
 else
-  echo "⚠️  Frontend package.json tidak ditemukan (project-final3-frontend/ atau hospital-frontend/)."
+  echo "⚠️  Frontend package.json tidak ditemukan (hospital-frontendjs/ atau project-final3-frontend/)."
 fi
 
 # ==============================================
@@ -312,10 +312,10 @@ echo ""
 echo "[C] Restore frontend dependencies..."
 if [ -d "$SAVE_DIR/npm/node_modules" ]; then
   # Cari frontend directory
-  if [ -f "$PROJECT_DIR/project-final3-frontend/package.json" ]; then
+  if [ -f "$PROJECT_DIR/hospital-frontendjs/package.json" ]; then
+    FRONTEND_DIR="$PROJECT_DIR/hospital-frontendjs"
+  elif [ -f "$PROJECT_DIR/project-final3-frontend/package.json" ]; then
     FRONTEND_DIR="$PROJECT_DIR/project-final3-frontend"
-  elif [ -f "$PROJECT_DIR/hospital-frontend/package.json" ]; then
-    FRONTEND_DIR="$PROJECT_DIR/hospital-frontend"
   else
     FRONTEND_DIR=""
   fi
@@ -464,7 +464,7 @@ echo "  # 2. Backend (Spring Boot)"
 echo "  cd project-final3-backend && ./gradlew bootRun"
 echo ""
 echo "  # 3. Frontend (React + Vite)"
-echo "  cd project-final3-frontend && npm run dev"
+echo "  cd hospital-frontendjs && npm run dev"
 echo ""
 echo "  # 4. ML Service (FastAPI + TensorFlow)"
 echo "  cd project-final3-ml && source venv/bin/activate"

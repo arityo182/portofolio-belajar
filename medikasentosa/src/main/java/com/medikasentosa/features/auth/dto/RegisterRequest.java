@@ -17,5 +17,10 @@ public record RegisterRequest(
 
         @NotBlank(message = "Email wajib diisi") @Email(message = "Format email tidak valid") String email,
 
-        @NotBlank(message = "Password wajib diisi") @Size(min = 6, message = "Password minimal 6 karakter") String password) {
+        @NotBlank(message = "Password wajib diisi")
+        @Size(min = 12, max = 128, message = "Password minimal 12 karakter")
+        @jakarta.validation.constraints.Pattern(
+                regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$",
+                message = "Password harus mengandung minimal satu huruf dan satu angka")
+        String password) {
 }

@@ -1,26 +1,79 @@
 """Entry point FastAPI untuk ML Service skrining osteoporosis RS Medika Sentosa.
 
-Modul ini mendefinisikan aplikasi FastAPI, middleware CORS, siklus hidup
-warm-up model, serta endpoint health check dan prediksi osteoporosis
-(EfficientNetV2 3 kelas + Grad-CAM).
+Modul ini mendefinisikan aplikasi FastAPI, siklus hidup warm-up model, serta
+endpoint health check dan prediksi osteoporosis (EfficientNetV2 3 kelas +
+Grad-CAM).
+
+Layanan ini bersifat internal: seluruh endpoint prediksi mewajibkan header
+``X-Internal-API-Key`` yang hanya diketahui backend Spring Boot. Dokumentasi
+OpenAPI dimatikan kecuali ``ENABLE_DOCS=true``.
 """
 
+import asyncio
+import hmac
+import logging
+import os
 import time
-import numpy as np
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 
-from app.preprocessing import preprocess
-from app.predictor import predict, model
+import numpy as np
+from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
+
 from app.gradcam import generate_gradcam
-from app.schema import PredictionResponse, HealthResponse
+from app.predictor import model, predict
+from app.preprocessing import preprocess, validate_image_bytes
+from app.schema import HealthResponse, PredictionResponse
+
+logger = logging.getLogger("ml-service")
 
 GRADCAM_LAYER = "top_activation"
-# GRADCAM_LAYER = "layer_normalization"
 
-# membuat data dummy di awal inisiasi karen tensorflow menyebalkan untuk pertama kali test perlu dipancing
+APP_ENV = os.getenv("APP_ENV", "production").strip().lower()
+IS_PRODUCTION = APP_ENV in {"production", "prod"}
+ENABLE_DOCS = os.getenv("ENABLE_DOCS", "false").strip().lower() == "true"
+ALLOW_UNAUTHENTICATED = (
+    not IS_PRODUCTION
+    and os.getenv("ML_ALLOW_UNAUTHENTICATED", "false").strip().lower() == "true"
+)
+
+INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "")
+MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(10 * 1024 * 1024)))
+MAX_CONCURRENCY = max(1, int(os.getenv("MAX_CONCURRENCY", "2")))
+INFERENCE_TIMEOUT_SECONDS = float(os.getenv("INFERENCE_TIMEOUT_SECONDS", "30"))
+
+if not INTERNAL_API_KEY and not ALLOW_UNAUTHENTICATED:
+    raise RuntimeError(
+        "INTERNAL_API_KEY wajib diisi. Set ML_ALLOW_UNAUTHENTICATED=true hanya "
+        "untuk development lokal tanpa backend."
+    )
+
+if ALLOW_UNAUTHENTICATED:
+    logger.warning(
+        "ML_ALLOW_UNAUTHENTICATED aktif — endpoint prediksi TIDAK terautentikasi. "
+        "Jangan gunakan konfigurasi ini di production."
+    )
+
+# Membatasi inferensi bersamaan agar RAM/CPU/GPU tidak habis oleh request paralel.
+_inference_semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
+
+
+async def require_internal_key(
+    x_internal_api_key: str | None = Header(default=None, alias="X-Internal-API-Key"),
+) -> None:
+    """Dependency autentikasi antar-service.
+
+    Raises:
+        HTTPException: 401 bila header tidak ada atau tidak cocok.
+    """
+    if ALLOW_UNAUTHENTICATED and not INTERNAL_API_KEY:
+        return
+    if not x_internal_api_key or not hmac.compare_digest(
+        x_internal_api_key, INTERNAL_API_KEY
+    ):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Siklus hidup aplikasi: warm-up model saat startup.
@@ -35,88 +88,115 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         None: Kontrol diserahkan ke runtime selama aplikasi berjalan;
             kode setelah `yield` dijalankan saat shutdown.
     """
-    # ── WARM-UP: panggil model sekali dengan gambar dummy ──
-    print("Warming up model...")
+    logger.info("Warming up model...")
     dummy = np.zeros((1, 224, 224, 3), dtype=np.float32)
     model.predict(dummy, verbose=0)
-    print("Model ready!")
+    logger.info("Model ready")
     yield
-    # (kode cleanup saat shutdown bisa di sini, kosong untuk sekarang)
 
 
 app = FastAPI(
     title="RS Medika Sentosa - ML Service",
     description=(
-        "Layanan machine learning untuk skrining osteoporosis dari citra "
-        "X-ray. Menggunakan model EfficientNetV2 (3 kelas: Normal, Osteopenia, "
-        "Osteoporosis) dengan visualisasi Grad-CAM untuk interpretabilitas."
+        "Layanan machine learning internal untuk skrining osteoporosis dari "
+        "citra X-ray (EfficientNetV2, 3 kelas, Grad-CAM)."
     ),
     version="1.0.0",
     lifespan=lifespan,
+    docs_url="/docs" if ENABLE_DOCS else None,
+    redoc_url="/redoc" if ENABLE_DOCS else None,
+    openapi_url="/openapi.json" if ENABLE_DOCS else None,
 )
-
-# CORS
-app.add_middleware(CORSMiddleware,
-                   allow_origins=[
-                       "http://localhost:8080",     # Spring Boot (dev)
-                       "http://localhost:5173",     # React (dev)
-                       "http://localhost:80",        # Nginx (Docker)
-                       "https://mamedika.com",       # Production domain
-                       "https://www.mamedika.com",   # Production domain (www)
-                   ],
-                   allow_methods=["*"],
-                   allow_headers=["*"],
-                   )
 
 
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
-    """Health check layanan.
-
-    Endpoint ringan untuk memastikan service hidup dan dapat diakses
-    (mis. oleh load balancer atau backend Spring Boot).
-
-    Returns:
-        HealthResponse: Status layanan dan identitasnya.
-    """
+    """Health check layanan (tanpa informasi sensitif)."""
     return {"status": "UP", "service": "ML Service - Osteoporosis"}
 
 
-@app.post("/predict/osteoporosis", response_model=PredictionResponse)
+def _run_inference(image_bytes: bytes) -> dict:
+    """Preprocessing + inferensi + Grad-CAM (dijalankan di worker thread)."""
+    image = preprocess(image_bytes)
+    result = predict(image)
+    class_index = result.pop("_class_index")
+    result["gradcamImage"] = generate_gradcam(
+        model, image, GRADCAM_LAYER, class_index
+    )
+    return result
+
+
+@app.post(
+    "/predict/osteoporosis",
+    response_model=PredictionResponse,
+    dependencies=[Depends(require_internal_key)],
+)
 async def predict_osteoporosis(file: UploadFile = File(...)) -> PredictionResponse:
     """Prediksi osteoporosis dari citra X-ray.
 
-    Melakukan preprocessing citra, inferensi model EfficientNetV2 (3 kelas),
-    dan menghasilkan visualisasi Grad-CAM. Latensi pemrosesan sisi server
-    diukur dan disertakan dalam respons.
-
     Args:
-        file: Citra X-ray yang diunggah (JPG/PNG).
+        file: Citra X-ray yang diunggah (JPG/PNG, maksimum 10 MB).
 
     Returns:
-        PredictionResponse: Label prediksi, tingkat keyakinan, probabilitas
-            3 kelas, pesan risiko klinis, gambar Grad-CAM (base64), dan latensi.
+        PredictionResponse: Label prediksi, keyakinan, probabilitas, pesan
+            risiko, Grad-CAM (base64), dan latensi.
 
     Raises:
-        HTTPException: Status 400 jika format file bukan JPG/PNG, atau jika
-            citra tidak valid/tidak dapat diproses.
+        HTTPException: 400 untuk input tidak valid, 413 terlalu besar,
+            503 saat antrean penuh, 504 saat inferensi melebihi batas waktu.
     """
-    if file.content_type not in ["image/jpeg", "image/png"]:
-        raise HTTPException(status_code=400, detail="Format harus JPG atau PNG")
+    # Batasi pembacaan agar file raksasa tidak mengisi RAM.
+    image_bytes = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(image_bytes) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="Ukuran file melebihi batas 10 MB")
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="File kosong")
 
-    img_bytes = await file.read()
+    try:
+        validate_image_bytes(image_bytes)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     start = time.time()
     try:
-        img = preprocess(img_bytes)
-        result = predict(img)
+        # wait_for + to_thread: inferensi TensorFlow bersifat blocking.
+        await asyncio.wait_for(
+            _inference_semaphore.acquire(), timeout=5
+        )
+    except asyncio.TimeoutError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Layanan sedang sibuk. Coba lagi beberapa saat lagi.",
+        ) from exc
 
-        class_index = result.pop("_class_index")
-        gradcam_image = generate_gradcam(model, img, GRADCAM_LAYER, class_index)
-        result["gradcamImage"] = gradcam_image
-
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    # Jalankan inferensi di thread terpisah. Bila timeout, thread TensorFlow
+    # tetap berjalan; slot semaphore ditahan sampai future benar-benar selesai
+    # agar request timeout tidak membuka jalan bagi puluhan thread paralel.
+    loop = asyncio.get_running_loop()
+    future = loop.run_in_executor(None, _run_inference, image_bytes)
+    released = False
+    try:
+        result = await asyncio.wait_for(
+            asyncio.shield(future),
+            timeout=INFERENCE_TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError as exc:
+        future.add_done_callback(lambda _future: _inference_semaphore.release())
+        released = True
+        logger.warning("Inference timeout setelah %.0f detik", INFERENCE_TIMEOUT_SECONDS)
+        raise HTTPException(
+            status_code=504, detail="Pemrosesan citra melebihi batas waktu"
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception:
+        logger.exception("Inference gagal")
+        raise HTTPException(
+            status_code=500, detail="Gagal memproses citra. Silakan coba lagi."
+        ) from None
+    finally:
+        if not released:
+            _inference_semaphore.release()
 
     result["latencyMs"] = round((time.time() - start) * 1000, 2)
     return result

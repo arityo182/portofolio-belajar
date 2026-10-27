@@ -4,6 +4,7 @@ import com.medikasentosa.features.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
+import java.util.Map;
 
 /**
  * Entity yang menyimpan hasil satu kali screening osteoporosis milik seorang pengguna.
@@ -34,6 +35,11 @@ public class Screening {
 
     @Column(nullable = false)
     private Double confidence;
+
+    /** Distribusi probabilitas tiap kelas (JSON), mis. {"Normal":4.1,...}. */
+    @Convert(converter = ScreeningProbabilitiesConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private Map<String, Double> probabilities;
 
     @Column(columnDefinition = "TEXT")
     private String risk; // ← pesan risiko dari ML (FR-21)

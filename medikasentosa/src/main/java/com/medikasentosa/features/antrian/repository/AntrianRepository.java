@@ -5,6 +5,7 @@ import com.medikasentosa.features.jadwaldokter.entity.JadwalDokter;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -43,4 +44,23 @@ public interface AntrianRepository extends JpaRepository<Antrian, Long> {
      * @return jumlah antrian yang cocok
      */
     long countByAppointmentJadwalAndAppointmentTanggal(JadwalDokter jadwal, LocalDate tanggal);
+
+    /**
+     * Mengambil seluruh antrian pada tanggal tertentu, terurut berdasarkan
+     * nomor urut (dipakai panel dokter/admin untuk melihat antrian hari ini).
+     *
+     * @param tanggal tanggal appointment
+     * @return daftar antrian pada tanggal tersebut
+     */
+    List<Antrian> findByAppointmentTanggalOrderByNomorUrutAsc(LocalDate tanggal);
+
+    /**
+     * Mengambil antrian pada tanggal tertentu milik seorang dokter.
+     *
+     * @param tanggal  tanggal appointment
+     * @param dokterId ID dokter
+     * @return daftar antrian dokter pada tanggal tersebut
+     */
+    List<Antrian> findByAppointmentTanggalAndAppointmentDokterIdOrderByNomorUrutAsc(
+            LocalDate tanggal, Long dokterId);
 }

@@ -3,6 +3,15 @@ import glob
 import os
 from typing import Optional
 
+import numpy as np
+
+# ChromaDB 0.5.x masih memakai alias NumPy lama yang dihapus di NumPy 2.0.
+# Shim ini menjaga kompatibilitas tanpa mengubah API pemanggil.
+if not hasattr(np, "float_"):
+    np.float_ = np.float64
+if not hasattr(np, "int_"):
+    np.int_ = np.int64
+
 import chromadb
 from sentence_transformers import SentenceTransformer
 

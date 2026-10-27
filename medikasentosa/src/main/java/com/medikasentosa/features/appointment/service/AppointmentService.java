@@ -64,7 +64,9 @@ public class AppointmentService {
      * Membuat janji temu baru dengan serangkaian validasi berurutan:
      * <ol>
      *     <li>Pasien harus ada (404).</li>
-     *     <li>Jadwal harus ada (404).</li>
+     *     <li>Tanggal tidak boleh di masa lalu (400).</li>
+     *     <li>Jadwal harus ada (404) dan dikunci selama transaksi agar kuota aman
+     *         dari booking bersamaan.</li>
      *     <li>Jadwal harus aktif (400).</li>
      *     <li>Hari dari tanggal harus cocok dengan hari jadwal (400).</li>
      *     <li>Pasien belum memesan jadwal dan tanggal yang sama (409).</li>
@@ -90,17 +92,24 @@ public class AppointmentService {
         Pasien pasien = pasienRepository.findById(request.pasienId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pasien tidak ditemukan"));
 
-        // 2. Jadwal ada
-        JadwalDokter jadwal = jadwalDokterRepository.findById(request.jadwalId())
+        // 2. Tanggal tidak boleh di masa lalu
+        if (request.tanggal() == null || request.tanggal().isBefore(LocalDate.now())) {
+            log.warn("Appointment rejected: tanggal {} is in the past", request.tanggal());
+            throw new IllegalArgumentException("Tanggal janji temu tidak boleh di masa lalu");
+        }
+
+        // 3. Jadwal ada dan dikunci (PESSIMISTIC_WRITE) agar pengecekan kuota +
+        //    pembuatan antrian tidak balapan dengan request booking lain.
+        JadwalDokter jadwal = jadwalDokterRepository.findByIdForUpdate(request.jadwalId())
                 .orElseThrow(() -> new ResourceNotFoundException("Jadwal tidak ditemukan"));
 
-        // 3. Jadwal aktif
+        // 4. Jadwal aktif
         if (!Boolean.TRUE.equals(jadwal.getIsActive())) {
             log.warn("Appointment rejected: jadwal {} is not active", request.jadwalId());
             throw new IllegalArgumentException("Jadwal tidak aktif");
         }
 
-        // 4. Hari dari tanggal cocok dengan hari jadwal
+        // 5. Hari dari tanggal cocok dengan hari jadwal
         Hari hariTanggal = toHari(request.tanggal());
         if (hariTanggal != jadwal.getHari()) {
             log.warn("Appointment rejected: date {} does not match jadwal day {}", request.tanggal(), jadwal.getHari());
@@ -108,8 +117,8 @@ public class AppointmentService {
                     "Tanggal tidak sesuai hari jadwal (jadwal hari " + jadwal.getHari() + ")");
         }
 
-        // 5. Pasien belum booking jadwal + tanggal yang sama
-        if (appointmentRepository.existsByPasienIdAndJadwalAndTanggal(
+        // 6. Pasien belum booking jadwal + tanggal yang sama (BATAL tidak dihitung)
+        if (appointmentRepository.existsActiveByPasienIdAndJadwalAndTanggal(
                 pasien.getId(), jadwal, request.tanggal())) {
             log.warn("Appointment rejected: duplicate booking for pasienId={} jadwalId={} tanggal={}",
                     pasien.getId(), request.jadwalId(), request.tanggal());
@@ -117,14 +126,14 @@ public class AppointmentService {
                     "Pasien sudah memiliki janji temu pada jadwal dan tanggal ini");
         }
 
-        // 6. Kuota belum penuh
-        long terisi = appointmentRepository.countByJadwalAndTanggal(jadwal, request.tanggal());
+        // 7. Kuota belum penuh (BATAL tidak dihitung)
+        long terisi = appointmentRepository.countActiveByJadwalAndTanggal(jadwal, request.tanggal());
         if (terisi >= jadwal.getKuota()) {
             log.warn("Appointment rejected: kuota penuh for jadwalId={}", request.jadwalId());
             throw new IllegalArgumentException("Kuota jadwal pada tanggal ini sudah penuh");
         }
 
-        // 7. Simpan appointment (dokter dari jadwal, status MENUNGGU)
+        // 8. Simpan appointment (dokter dari jadwal, status MENUNGGU)
         Appointment appointment = Appointment.builder()
                 .pasien(pasien)
                 .dokter(jadwal.getDokter())
@@ -136,9 +145,18 @@ public class AppointmentService {
 
         appointmentRepository.save(appointment);
 
-        // 8. Auto-generate antrian dalam transaksi yang sama agar response
+        // 9. Auto-generate antrian dalam transaksi yang sama agar response
         //    langsung memuat nomorAntrian tanpa perlu panggilan endpoint terpisah.
         antrianService.generateAntrian(appointment.getId());
+
+        // 10. Beri tahu pasien + panel dokter secara real-time.
+        notificationService.broadcastNewAppointment(
+                appointment.getId(),
+                pasien.getId(),
+                appointment.getDokter().getId(),
+                pasien.getUser().getNama(),
+                appointment.getTanggal(),
+                appointment.getDokter().getPoli().getNama());
 
         return toResponse(appointment);
     }
@@ -210,8 +228,11 @@ public class AppointmentService {
         
         // Broadcast notifikasi real-time via WebSocket (efek samping, tidak mengubah REST)
         notificationService.broadcastStatusAppointment(
-                id, status.name(), appointment.getPasien().getId());
-        
+                id,
+                appointment.getPasien().getId(),
+                appointment.getDokter().getId(),
+                status.name());
+
         return toResponse(appointment);
     }
 
@@ -233,9 +254,9 @@ public class AppointmentService {
     }
 
     private AppointmentResponse toResponse(Appointment appointment) {
-        Integer nomorAntrian = antrianRepository.findByAppointmentId(appointment.getId())
-                .map(a -> a.getNomorUrut())
-                .orElse(null);
+        var antrian = antrianRepository.findByAppointmentId(appointment.getId()).orElse(null);
+        Integer nomorAntrian = antrian != null ? antrian.getNomorUrut() : null;
+        Long antrianId = antrian != null ? antrian.getId() : null;
 
         return new AppointmentResponse(
                 appointment.getId(),
@@ -252,6 +273,7 @@ public class AppointmentService {
                 appointment.getTanggal(),
                 appointment.getStatus(),
                 appointment.getKeluhan(),
-                nomorAntrian);
+                nomorAntrian,
+                antrianId);
     }
 }

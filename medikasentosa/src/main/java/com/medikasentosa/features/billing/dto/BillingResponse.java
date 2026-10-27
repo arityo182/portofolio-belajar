@@ -7,7 +7,7 @@ import java.util.List;
 
 /** Flat response for billing + items. */
 public record BillingResponse(
-        Long id, Long pasienId, String namaPasien,
+        Long id, Long pasienId, String namaPasien, Long appointmentId,
         BigDecimal totalHarga, StatusBilling status,
         LocalDate tanggalTagihan, String catatan,
         List<BillingItemResponse> items) {

@@ -248,10 +248,10 @@ public class AdminController {
     @PatchMapping("/users/{id}/password")
     @Operation(summary = "Reset password pengguna",
                description = "Admin mengganti password dokter/pasien. Password lama tidak perlu diketahui. "
-                       + "Password baru minimal 6 karakter.")
+                       + "Password baru minimal 12 karakter, mengandung huruf dan angka.")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Password berhasil diubah"),
-        @ApiResponse(responseCode = "400", description = "Password baru tidak valid (min 6 karakter)"),
+        @ApiResponse(responseCode = "400", description = "Password baru tidak valid (min 12 karakter)"),
         @ApiResponse(responseCode = "404", description = "User tidak ditemukan")
     })
     public UserAdminResponse resetPassword(@PathVariable Long id, @RequestBody java.util.Map<String, String> body) {

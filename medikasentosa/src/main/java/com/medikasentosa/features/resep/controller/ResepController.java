@@ -3,6 +3,7 @@ package com.medikasentosa.features.resep.controller;
 import com.medikasentosa.features.resep.dto.ResepRequest;
 import com.medikasentosa.features.resep.dto.ResepResponse;
 import com.medikasentosa.features.resep.service.ResepService;
+import com.medikasentosa.shared.security.AuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -28,9 +29,11 @@ import java.util.List;
 public class ResepController {
 
     private final ResepService resepService;
+    private final AuthorizationService authorization;
 
-    public ResepController(ResepService resepService) {
+    public ResepController(ResepService resepService, AuthorizationService authorization) {
         this.resepService = resepService;
+        this.authorization = authorization;
     }
 
     /**
@@ -48,6 +51,7 @@ public class ResepController {
         @ApiResponse(responseCode = "404", description = "Rekam medis tidak ditemukan")
     })
     public ResponseEntity<ResepResponse> create(@Valid @RequestBody ResepRequest request) {
+        authorization.requireRekamMedisWrite(request.rekamMedisId());
         ResepResponse response = resepService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -63,6 +67,7 @@ public class ResepController {
                description = "Mengembalikan seluruh resep milik rekam medis tertentu.")
     @ApiResponse(responseCode = "200", description = "Daftar resep berhasil diambil")
     public List<ResepResponse> getByRekamMedis(@PathVariable Long rekamMedisId) {
+        authorization.requireResepOfRekamMedis(rekamMedisId);
         return resepService.getByRekamMedis(rekamMedisId);
     }
 
@@ -80,6 +85,7 @@ public class ResepController {
         @ApiResponse(responseCode = "404", description = "Resep tidak ditemukan")
     })
     public ResponseEntity<Void> delete(@PathVariable Long id) {
+        authorization.requireResepWrite(id);
         resepService.delete(id);
         return ResponseEntity.noContent().build();
     }

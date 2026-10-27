@@ -149,8 +149,10 @@ echo "[3/5] Frontend — npm packages..."
 
 # Jalur pencarian frontend
 for FRONTEND_PATH in \
+  "$BASE_PORTFOLIO_DIR/hospital-frontendjs" \
   "$BASE_PORTFOLIO_DIR/hospital-frontend" \
   "$BASE_PORTFOLIO_DIR/portofolio-frontend" \
+  "$HOME/hospital-frontendjs" \
   "$HOME/hospital-frontend" \
   "$HOME/project-final3-frontend"; do
   if [ -f "$FRONTEND_PATH/package.json" ]; then
@@ -162,7 +164,7 @@ done
 if [ -n "${FRONTEND_DIR:-}" ]; then
   echo "  Frontend ditemukan: $FRONTEND_DIR"
   cd "$FRONTEND_DIR"
-  echo "  React · Vite · Tailwind · TypeScript"
+  echo "  React · Vite · Tailwind · JavaScript"
   echo "  Downloading npm packages..."
 
   rm -rf node_modules
@@ -374,8 +376,10 @@ echo ""
 echo "[C] Restore frontend dependencies..."
 
 for FRONTEND_DIR in \
+  "$BASE_PORTFOLIO_DIR/hospital-frontendjs" \
   "$BASE_PORTFOLIO_DIR/hospital-frontend" \
   "$BASE_PORTFOLIO_DIR/portofolio-frontend" \
+  "$HOME/hospital-frontendjs" \
   "$HOME/hospital-frontend"; do
   if [ -f "$FRONTEND_DIR/package.json" ]; then
     break

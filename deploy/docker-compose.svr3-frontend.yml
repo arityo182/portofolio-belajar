@@ -1,15 +1,23 @@
 # ============================================
 # SERVER 3 — Frontend Nginx
-# IP: 10.0.1.25 (contoh)
+# IP: 10.0.1.25 (contoh, sesuaikan)
 # ============================================
+# Hanya frontend yang boleh diakses publik (port 80/443 via reverse proxy).
 services:
   frontend:
     build:
-      context: ../hospital-frontend
+      context: ../hospital-frontendjs
       dockerfile: Dockerfile
       pull: false
     container_name: prod-frontend
     restart: always
     ports:
       - "80:80"
+    security_opt:
+      - no-new-privileges:true
+    # Nginx mem-proxy /api dan /ws ke http://backend:8080. Pada deployment
+    # split-server, backend berada di server 2 sehingga nama "backend" harus
+    # di-resolve ke IP privatnya.
+    extra_hosts:
+      - "backend:10.0.1.20"
     depends_on: []

@@ -16,6 +16,7 @@ import com.medikasentosa.features.rekammedis.dto.RekamMedisResponse;
 import com.medikasentosa.features.rekammedis.entity.RekamMedis;
 import com.medikasentosa.features.rekammedis.repository.RekamMedisRepository;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import com.medikasentosa.shared.notification.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +42,9 @@ class RekamMedisServiceTest {
 
     @Mock
     private AppointmentRepository appointmentRepository;
+
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private RekamMedisService rekamMedisService;
@@ -93,6 +97,7 @@ class RekamMedisServiceTest {
         assertThat(appointment.getStatus()).isEqualTo(StatusAppointment.SELESAI);
         verify(appointmentRepository).save(appointment);
         verify(rekamMedisRepository).save(any(RekamMedis.class));
+        verify(notificationService).broadcastStatusAppointment(300L, 3L, 12L, "SELESAI");
     }
 
     @Test

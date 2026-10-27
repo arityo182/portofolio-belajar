@@ -3,6 +3,7 @@ package com.medikasentosa.features.rawatinap.controller;
 import com.medikasentosa.features.rawatinap.dto.RawatInapRequest;
 import com.medikasentosa.features.rawatinap.dto.RawatInapResponse;
 import com.medikasentosa.features.rawatinap.service.RawatInapService;
+import com.medikasentosa.shared.security.AuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -28,13 +30,16 @@ import java.util.List;
 public class RawatInapController {
 
     private final RawatInapService rawatInapService;
+    private final AuthorizationService authorization;
 
-    public RawatInapController(RawatInapService rawatInapService) {
+    public RawatInapController(RawatInapService rawatInapService, AuthorizationService authorization) {
         this.rawatInapService = rawatInapService;
+        this.authorization = authorization;
     }
 
     @GetMapping
-    @Operation(summary = "Semua rawat inap")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Semua rawat inap (admin)")
     public List<RawatInapResponse> getAll() {
         return rawatInapService.getAll();
     }
@@ -42,11 +47,13 @@ public class RawatInapController {
     @GetMapping("/pasien/{pasienId}")
     @Operation(summary = "Rawat inap by pasien")
     public List<RawatInapResponse> getByPasien(@PathVariable Long pasienId) {
+        authorization.requireRawatInapOfPasien(pasienId);
         return rawatInapService.getByPasien(pasienId);
     }
 
     @GetMapping("/aktif")
-    @Operation(summary = "Rawat inap yang masih aktif")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Rawat inap yang masih aktif (admin)")
     public List<RawatInapResponse> getAktif() {
         return rawatInapService.getAktif();
     }
@@ -61,6 +68,8 @@ public class RawatInapController {
         @ApiResponse(responseCode = "409", description = "Kamar penuh atau tidak tersedia")
     })
     public ResponseEntity<RawatInapResponse> masuk(@Valid @RequestBody RawatInapRequest request) {
+        authorization.requireStaff();
+        authorization.requireDokterSelfOrAdmin(request.dokterId());
         return ResponseEntity.status(HttpStatus.CREATED).body(rawatInapService.masuk(request));
     }
 
@@ -76,6 +85,7 @@ public class RawatInapController {
     public RawatInapResponse keluar(
             @PathVariable Long id,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate tanggalKeluar) {
+        authorization.requireRawatInapWrite(id);
         return rawatInapService.keluar(id, tanggalKeluar);
     }
 }

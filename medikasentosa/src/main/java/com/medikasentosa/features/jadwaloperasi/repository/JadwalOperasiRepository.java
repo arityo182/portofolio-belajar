@@ -23,4 +23,12 @@ public interface JadwalOperasiRepository extends JpaRepository<JadwalOperasi, Lo
     List<JadwalOperasi> findByTanggalOperasi(LocalDate tanggal);
 
     List<JadwalOperasi> findByStatus(StatusOperasi status);
+
+    /** Apakah ruang operasi sudah dipakai pada tanggal dan jam yang sama. */
+    boolean existsByTanggalOperasiAndJamMulaiAndRuangOperasiIgnoreCase(
+            LocalDate tanggalOperasi, java.time.LocalTime jamMulai, String ruangOperasi);
+
+    /** Apakah dokter sudah memiliki operasi lain pada tanggal dan jam yang sama. */
+    boolean existsByTanggalOperasiAndJamMulaiAndDokterId(
+            LocalDate tanggalOperasi, java.time.LocalTime jamMulai, Long dokterId);
 }

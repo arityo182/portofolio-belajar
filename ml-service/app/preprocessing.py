@@ -1,5 +1,53 @@
+import io
+import os
+
 import cv2
 import numpy as np
+from PIL import Image, UnidentifiedImageError
+
+# Batas piksel untuk mencegah decompression bomb (40 megapiksel).
+MAX_IMAGE_PIXELS = int(os.getenv("MAX_IMAGE_PIXELS", "40000000"))
+MAX_IMAGE_DIMENSION = int(os.getenv("MAX_IMAGE_DIMENSION", "12000"))
+
+_JPEG_MAGIC = b"\xff\xd8\xff"
+_PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+
+
+def validate_image_bytes(image_bytes: bytes) -> None:
+    """Memvalidasi tipe file dari magic bytes dan batas dimensi citra.
+
+    Content-Type dari client tidak dapat dipercaya, sehingga format ditentukan
+    dari signature file. Dimensi diperiksa sebelum OpenCV mendekode gambar
+    untuk menghindari serangan decompression bomb.
+
+    Args:
+        image_bytes: Isi file yang diunggah.
+
+    Raises:
+        ValueError: Jika format bukan JPEG/PNG, file rusak, atau dimensi
+            melebihi batas.
+    """
+    if image_bytes.startswith(_JPEG_MAGIC) or image_bytes.startswith(_PNG_MAGIC):
+        pass
+    else:
+        raise ValueError("Format file harus JPG atau PNG")
+
+    try:
+        # verify() memastikan struktur file benar sebelum decoding penuh.
+        with Image.open(io.BytesIO(image_bytes)) as probe:
+            probe.verify()
+        with Image.open(io.BytesIO(image_bytes)) as probe:
+            width, height = probe.size
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise ValueError("Gambar tidak valid atau rusak") from exc
+
+    if width <= 0 or height <= 0:
+        raise ValueError("Dimensi gambar tidak valid")
+    if width > MAX_IMAGE_DIMENSION or height > MAX_IMAGE_DIMENSION:
+        raise ValueError("Dimensi gambar terlalu besar")
+    if width * height > MAX_IMAGE_PIXELS:
+        raise ValueError("Jumlah piksel gambar melebihi batas")
+
 
 def preprocess(image_bytes: bytes) -> np.ndarray:
     """Preprocessing citra X-ray agar identik dengan pipeline saat training.
@@ -32,7 +80,7 @@ def preprocess(image_bytes: bytes) -> np.ndarray:
     img = cv2.medianBlur(img, 3)
 
     # CLAHE
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     img = clahe.apply(img)
 
     # Resize 224x224
@@ -50,4 +98,3 @@ def preprocess(image_bytes: bytes) -> np.ndarray:
     img = np.expand_dims(img, axis=0)
 
     return img
-

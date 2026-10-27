@@ -24,6 +24,9 @@ public interface RekamMedisRepository extends JpaRepository<RekamMedis, Long> {
      */
     List<RekamMedis> findByPasienId(Long pasienId);
 
+    /** Apakah dokter pernah membuat rekam medis untuk pasien ini. */
+    boolean existsByPasienIdAndDokterId(Long pasienId, Long dokterId);
+
     /**
      * Mengambil seluruh rekam medis yang dibuat oleh seorang dokter.
      *

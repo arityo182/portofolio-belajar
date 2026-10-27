@@ -81,6 +81,7 @@ public class AdminService {
     @Transactional
     public DokterResponse createDokterWithUser(DokterCreateRequest request) {
         log.info("Creating dokter with user: email={}", request.email());
+        requireStrongPassword(request.password());
         // Validasi email unik
         if (userRepository.existsByEmail(request.email())) {
             log.warn("Dokter creation failed: email {} already exists", request.email());
@@ -133,6 +134,7 @@ public class AdminService {
     @Transactional
     public PasienResponse createPasienWithUser(PasienCreateRequest request) {
         log.info("Creating pasien with user: email={}", request.email());
+        requireStrongPassword(request.password());
         if (userRepository.existsByEmail(request.email())) {
             log.warn("Pasien creation failed: email {} already exists", request.email());
             throw new DuplicateResourceException("Email sudah terdaftar");
@@ -190,6 +192,11 @@ public class AdminService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User tidak ditemukan"));
         user.setIsActive(active);
+        // Nonaktifkan akun = cabut semua sesi yang masih hidup.
+        if (!active) {
+            int version = user.getTokenVersion() == null ? 0 : user.getTokenVersion();
+            user.setTokenVersion(version + 1);
+        }
         userRepository.save(user);
         return toUserAdminResponse(user);
     }
@@ -208,13 +215,18 @@ public class AdminService {
     @Transactional
     public UserAdminResponse resetPassword(Long id, String newPassword) {
         log.info("Resetting password for userId={}", id);
-        if (newPassword == null || newPassword.length() < 6) {
-            log.warn("Password reset rejected: password too short for userId={}", id);
-            throw new IllegalArgumentException("Password baru minimal 6 karakter");
+        if (newPassword == null || newPassword.length() < 12
+                || !newPassword.matches("^(?=.*[A-Za-z])(?=.*\\d).+$")) {
+            log.warn("Password reset rejected: policy not met for userId={}", id);
+            throw new IllegalArgumentException(
+                    "Password baru minimal 12 karakter serta mengandung huruf dan angka");
         }
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User tidak ditemukan"));
         user.setPassword(passwordEncoder.encode(newPassword));
+        // Reset password = cabut semua sesi lama.
+        int version = user.getTokenVersion() == null ? 0 : user.getTokenVersion();
+        user.setTokenVersion(version + 1);
         userRepository.save(user);
         return toUserAdminResponse(user);
     }
@@ -236,6 +248,18 @@ public class AdminService {
         return new UserAdminResponse(
                 user.getId(), user.getNama(), user.getEmail(),
                 user.getRole(), user.getIsActive());
+    }
+
+    /**
+     * Defense in depth: validasi password juga di service agar pemanggil
+     * internal tidak dapat melewati anotasi DTO.
+     */
+    private void requireStrongPassword(String password) {
+        if (password == null || password.length() < 12
+                || !password.matches("^(?=.*[A-Za-z])(?=.*\\d).+$")) {
+            throw new IllegalArgumentException(
+                    "Password minimal 12 karakter serta mengandung huruf dan angka");
+        }
     }
 
     private DokterResponse toDokterResponse(Dokter dokter) {

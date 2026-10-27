@@ -3,6 +3,7 @@ package com.medikasentosa.features.radiologi.controller;
 import com.medikasentosa.features.radiologi.dto.RadiologiRequest;
 import com.medikasentosa.features.radiologi.dto.RadiologiResponse;
 import com.medikasentosa.features.radiologi.service.RadiologiService;
+import com.medikasentosa.shared.security.AuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,14 +33,17 @@ import java.util.Map;
 public class RadiologiController {
 
     private final RadiologiService radiologiService;
+    private final AuthorizationService authorization;
 
-    public RadiologiController(RadiologiService radiologiService) {
+    public RadiologiController(RadiologiService radiologiService, AuthorizationService authorization) {
         this.radiologiService = radiologiService;
+        this.authorization = authorization;
     }
 
     @GetMapping
-    @Operation(summary = "Ambil semua order radiologi",
-               description = "Mengembalikan seluruh daftar order radiologi konvensional.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Ambil semua order radiologi (admin)",
+               description = "Mengembalikan seluruh daftar order radiologi. Khusus admin.")
     @ApiResponse(responseCode = "200")
     public List<RadiologiResponse> getAll() {
         return radiologiService.getAll();
@@ -49,6 +54,7 @@ public class RadiologiController {
                description = "Mengembalikan seluruh order radiologi milik rekam medis tertentu.")
     @ApiResponse(responseCode = "200")
     public List<RadiologiResponse> getByRekamMedis(@PathVariable Long rekamMedisId) {
+        authorization.requireRekamMedisAccess(rekamMedisId);
         return radiologiService.getByRekamMedis(rekamMedisId);
     }
 
@@ -61,6 +67,7 @@ public class RadiologiController {
         @ApiResponse(responseCode = "404", description = "Rekam medis tidak ditemukan")
     })
     public ResponseEntity<RadiologiResponse> create(@Valid @RequestBody RadiologiRequest request) {
+        authorization.requireRekamMedisWrite(request.rekamMedisId());
         return ResponseEntity.status(HttpStatus.CREATED).body(radiologiService.create(request));
     }
 
@@ -73,6 +80,7 @@ public class RadiologiController {
         @ApiResponse(responseCode = "404", description = "Order tidak ditemukan")
     })
     public RadiologiResponse updateHasil(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        authorization.requireRadiologiWrite(id);
         String hasilDeskripsi = body.get("hasilDeskripsi");
         String gambarUrl = body.get("gambarUrl");
         return radiologiService.updateHasil(id, hasilDeskripsi, gambarUrl);

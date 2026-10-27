@@ -43,6 +43,7 @@ async def chat_complete(messages: list[dict], model: str = None) -> str:
     }
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers=_HEADERS) as client:
         response = await client.post(f"{VLLM_BASE_URL}/v1/chat/completions", json=payload)
+        response.raise_for_status()
         data = response.json()
         # OpenAI-compatible response: choices[0].message.content
         return data["choices"][0]["message"]["content"]
@@ -68,6 +69,7 @@ async def chat_stream(messages: list[dict], model: str = None) -> AsyncGenerator
     }
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers=_HEADERS) as client:
         async with client.stream("POST", f"{VLLM_BASE_URL}/v1/chat/completions", json=payload) as response:
+            response.raise_for_status()
             async for line in response.aiter_lines():
                 if not line.strip():
                     continue
@@ -98,6 +100,7 @@ async def check_vllm_health() -> bool:
     try:
         async with httpx.AsyncClient(timeout=5.0, headers=_HEADERS) as client:
             r = await client.get(f"{VLLM_BASE_URL}/v1/models")
+            r.raise_for_status()
             data = r.json()
             # vLLM /v1/models returns {"data": [{"id": "model-name", ...}]}
             models = data.get("data", [])

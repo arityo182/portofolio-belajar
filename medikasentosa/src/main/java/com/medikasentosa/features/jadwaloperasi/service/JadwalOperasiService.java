@@ -9,6 +9,7 @@ import com.medikasentosa.features.jadwaloperasi.entity.StatusOperasi;
 import com.medikasentosa.features.jadwaloperasi.repository.JadwalOperasiRepository;
 import com.medikasentosa.features.pasien.entity.Pasien;
 import com.medikasentosa.features.pasien.repository.PasienRepository;
+import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,18 @@ public class JadwalOperasiService {
         if (req.tanggalOperasi().isBefore(LocalDate.now())) {
             log.warn("Jadwal operasi rejected: tanggal {} is in the past", req.tanggalOperasi());
             throw new IllegalArgumentException("Tanggal operasi tidak boleh di masa lalu");
+        }
+
+        // Cegah bentrok ruang operasi dan jadwal dokter pada tanggal+jam yang sama.
+        if (repo.existsByTanggalOperasiAndJamMulaiAndRuangOperasiIgnoreCase(
+                req.tanggalOperasi(), req.jamMulai(), req.ruangOperasi())) {
+            throw new DuplicateResourceException(
+                    "Ruang operasi " + req.ruangOperasi() + " sudah dipakai pada tanggal dan jam tersebut");
+        }
+        if (repo.existsByTanggalOperasiAndJamMulaiAndDokterId(
+                req.tanggalOperasi(), req.jamMulai(), dokter.getId())) {
+            throw new DuplicateResourceException(
+                    "Dokter sudah memiliki jadwal operasi pada tanggal dan jam tersebut");
         }
 
         JadwalOperasi jo = JadwalOperasi.builder()

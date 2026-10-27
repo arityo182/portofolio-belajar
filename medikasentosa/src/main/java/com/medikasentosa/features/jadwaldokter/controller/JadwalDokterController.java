@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,16 +34,17 @@ public class JadwalDokterController {
     }
 
     /**
-     * Mengambil seluruh daftar jadwal praktik yang tersimpan.
+     * Mengambil daftar jadwal praktik aktif. Jadwal nonaktif hanya tersedia
+     * melalui endpoint admin {@code /api/admin/jadwal}.
      *
-     * @return daftar semua jadwal
+     * @return daftar jadwal aktif
      */
     @GetMapping
-    @Operation(summary = "Ambil semua jadwal",
-               description = "Mengembalikan seluruh daftar jadwal praktik yang tersimpan.")
+    @Operation(summary = "Ambil semua jadwal aktif",
+               description = "Mengembalikan daftar jadwal praktik yang masih aktif.")
     @ApiResponse(responseCode = "200", description = "Daftar jadwal berhasil diambil")
     public List<JadwalDokterResponse> getAll() {
-        return jadwalDokterService.getAll();
+        return jadwalDokterService.getAllActive();
     }
 
     /**
@@ -69,7 +71,8 @@ public class JadwalDokterController {
      * @return data jadwal yang berhasil dibuat (HTTP 201)
      */
     @PostMapping
-    @Operation(summary = "Buat jadwal baru",
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Buat jadwal baru (admin)",
                description = "Membuat jadwal praktik baru untuk seorang dokter.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Jadwal berhasil dibuat"),
@@ -89,7 +92,8 @@ public class JadwalDokterController {
      * @return data jadwal setelah diperbarui
      */
     @PutMapping("/{id}")
-    @Operation(summary = "Perbarui jadwal",
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Perbarui jadwal (admin)",
                description = "Memperbarui hari, jam, dan kuota jadwal berdasarkan ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Jadwal berhasil diperbarui"),
@@ -107,7 +111,8 @@ public class JadwalDokterController {
      * @return respons kosong (HTTP 204 No Content)
      */
     @DeleteMapping("/{id}")
-    @Operation(summary = "Nonaktifkan jadwal",
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Nonaktifkan jadwal (admin)",
                description = "Menonaktifkan jadwal (soft delete) sehingga tidak lagi aktif.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Jadwal berhasil dinonaktifkan"),

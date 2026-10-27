@@ -4,6 +4,7 @@ import com.medikasentosa.features.jadwaloperasi.dto.JadwalOperasiRequest;
 import com.medikasentosa.features.jadwaloperasi.dto.JadwalOperasiResponse;
 import com.medikasentosa.features.jadwaloperasi.entity.StatusOperasi;
 import com.medikasentosa.features.jadwaloperasi.service.JadwalOperasiService;
+import com.medikasentosa.shared.security.AuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,13 +31,16 @@ import java.util.List;
 public class JadwalOperasiController {
 
     private final JadwalOperasiService service;
+    private final AuthorizationService authorization;
 
-    public JadwalOperasiController(JadwalOperasiService service) {
+    public JadwalOperasiController(JadwalOperasiService service, AuthorizationService authorization) {
         this.service = service;
+        this.authorization = authorization;
     }
 
     @GetMapping
-    @Operation(summary = "Semua jadwal operasi")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Semua jadwal operasi (admin)")
     public List<JadwalOperasiResponse> getAll() {
         return service.getAll();
     }
@@ -44,17 +48,20 @@ public class JadwalOperasiController {
     @GetMapping("/pasien/{pasienId}")
     @Operation(summary = "Jadwal operasi by pasien")
     public List<JadwalOperasiResponse> getByPasien(@PathVariable Long pasienId) {
+        authorization.requireOperasiOfPasien(pasienId);
         return service.getByPasien(pasienId);
     }
 
     @GetMapping("/dokter/{dokterId}")
     @Operation(summary = "Jadwal operasi by dokter")
     public List<JadwalOperasiResponse> getByDokter(@PathVariable Long dokterId) {
+        authorization.requireOperasiOfDokter(dokterId);
         return service.getByDokter(dokterId);
     }
 
     @GetMapping("/tanggal")
-    @Operation(summary = "Jadwal operasi by tanggal")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Jadwal operasi by tanggal (admin)")
     public List<JadwalOperasiResponse> getByTanggal(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate tanggal) {
         return service.getByTanggal(tanggal);

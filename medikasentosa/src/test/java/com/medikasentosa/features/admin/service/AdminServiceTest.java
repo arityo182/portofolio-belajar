@@ -86,14 +86,14 @@ class AdminServiceTest {
                 .build();
 
         dokterCreateRequest = new DokterCreateRequest(
-                "dr. Karim Benzema", "karim.dokter@medika.com", "password123",
+                "dr. Karim Benzema", "karim.dokter@medika.com", "Password12345!",
                 12L, "STR-998877665", "Spesialis Ortopedi", "082233778899");
     }
 
     @Test
     void createDokterWithUser_success_createsUserAndDokter() {
         when(userRepository.existsByEmail("karim.dokter@medika.com")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenReturn("hashed_pass");
+        when(passwordEncoder.encode("Password12345!")).thenReturn("hashed_pass");
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(dokterService.create(any())).thenReturn(new DokterResponse(
                 20L, 13L, "dr. Karim Benzema", "karim.dokter@medika.com",
@@ -166,12 +166,12 @@ class AdminServiceTest {
     @Test
     void resetPassword_updatesPassword() {
         when(userRepository.findById(13L)).thenReturn(Optional.of(user));
-        when(passwordEncoder.encode("newpass123")).thenReturn("hashed_new");
+        when(passwordEncoder.encode("Newpass12345!")).thenReturn("hashed_new");
 
-        UserAdminResponse response = adminService.resetPassword(13L, "newpass123");
+        UserAdminResponse response = adminService.resetPassword(13L, "Newpass12345!");
 
         assertThat(response.nama()).isEqualTo("dr. Karim Benzema");
-        verify(passwordEncoder).encode("newpass123");
+        verify(passwordEncoder).encode("Newpass12345!");
         verify(userRepository).save(user);
     }
 }

@@ -42,11 +42,30 @@ public class User {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    /**
+     * Versi token sesi. Dinaikkan saat logout, reset password, atau akun
+     * dinonaktifkan sehingga seluruh access/refresh token lama langsung invalid.
+     */
+    @Builder.Default
+    @Column(name = "token_version")
+    private Integer tokenVersion = 0;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    @PostLoad
+    void ensureTokenVersion() {
+        if (this.tokenVersion == null) {
+            this.tokenVersion = 0;
+        }
+    }
+
     @PrePersist
     void onCreate() {
-        this.createdAt = Instant.now();   // otomatis isi waktu saat dibuat
+        // Pastikan tokenVersion terisi untuk baris lama/baru, lalu set waktu buat.
+        if (this.tokenVersion == null) {
+            this.tokenVersion = 0;
+        }
+        this.createdAt = Instant.now();
     }
 }

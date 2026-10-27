@@ -13,9 +13,14 @@ import com.medikasentosa.features.billing.entity.StatusBilling;
 import com.medikasentosa.features.billing.repository.BillingItemRepository;
 import com.medikasentosa.features.billing.repository.BillingRepository;
 import com.medikasentosa.features.dokter.entity.Dokter;
+import com.medikasentosa.features.laboratorium.repository.LabOrderRepository;
 import com.medikasentosa.features.pasien.entity.JenisKelamin;
 import com.medikasentosa.features.pasien.entity.Pasien;
 import com.medikasentosa.features.poli.entity.Poli;
+import com.medikasentosa.features.radiologi.repository.RadiologiRepository;
+import com.medikasentosa.features.rekammedis.repository.RekamMedisRepository;
+import com.medikasentosa.features.resep.repository.ResepRepository;
+import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +48,14 @@ class BillingServiceTest {
     private BillingItemRepository itemRepo;
     @Mock
     private AppointmentRepository appointmentRepo;
+    @Mock
+    private RekamMedisRepository rekamMedisRepo;
+    @Mock
+    private LabOrderRepository labOrderRepo;
+    @Mock
+    private RadiologiRepository radiologiRepo;
+    @Mock
+    private ResepRepository resepRepo;
 
     @InjectMocks
     private BillingService billingService;
@@ -67,28 +80,55 @@ class BillingServiceTest {
                 .noHp("081388990011").golDarah("B").build();
 
         appointment = Appointment.builder().id(400L).pasien(pasien).dokter(dokter)
-                .tanggal(LocalDate.of(2024, 7,26)).status(StatusAppointment.SELESAI).build();
+                .tanggal(LocalDate.now()).status(StatusAppointment.SELESAI).build();
 
-        billing = Billing.builder().id(1L).pasien(pasien).totalHarga(BigDecimal.valueOf(150000))
+        billing = Billing.builder().id(1L).pasien(pasien).appointment(appointment)
+                .totalHarga(BigDecimal.valueOf(150000))
                 .status(StatusBilling.BELUM_BAYAR).tanggalTagihan(LocalDate.now()).build();
     }
 
     @Test
     void generateDariAppointment_createsBillingWithItem() {
         when(appointmentRepo.findById(400L)).thenReturn(Optional.of(appointment));
-        when(billingRepo.save(any(Billing.class))).thenAnswer(inv -> {
+        when(billingRepo.existsByAppointmentId(400L)).thenReturn(false);
+        when(billingRepo.saveAndFlush(any(Billing.class))).thenAnswer(inv -> {
             Billing b = inv.getArgument(0);
             b.setId(1L);
             return b;
         });
-        when(itemRepo.save(any(BillingItem.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(itemRepo.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
 
         BillingResponse response = billingService.generateDariAppointment(400L);
 
         assertThat(response.status()).isEqualTo(StatusBilling.BELUM_BAYAR);
         assertThat(response.totalHarga()).isEqualTo(BigDecimal.valueOf(150000));
-        verify(billingRepo).save(any(Billing.class));
-        verify(itemRepo).save(any(BillingItem.class));
+        assertThat(response.appointmentId()).isEqualTo(400L);
+        verify(billingRepo).saveAndFlush(any(Billing.class));
+        verify(itemRepo).saveAll(any());
+    }
+
+    @Test
+    void generateDariAppointment_fails_billingAlreadyExists() {
+        when(appointmentRepo.findById(400L)).thenReturn(Optional.of(appointment));
+        when(billingRepo.existsByAppointmentId(400L)).thenReturn(true);
+
+        assertThatThrownBy(() -> billingService.generateDariAppointment(400L))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("sudah ada");
+
+        verify(billingRepo, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void generateDariAppointment_fails_appointmentCancelled() {
+        appointment.setStatus(StatusAppointment.BATAL);
+        when(appointmentRepo.findById(400L)).thenReturn(Optional.of(appointment));
+
+        assertThatThrownBy(() -> billingService.generateDariAppointment(400L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("dibatalkan");
+
+        verify(billingRepo, never()).saveAndFlush(any());
     }
 
     @Test
@@ -127,6 +167,16 @@ class BillingServiceTest {
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).namaPasien()).isEqualTo("Agus Salim");
+    }
+
+    @Test
+    void getByAppointment_returnsBilling() {
+        when(billingRepo.findByAppointmentId(400L)).thenReturn(Optional.of(billing));
+        when(itemRepo.findByBillingId(1L)).thenReturn(List.of());
+
+        BillingResponse response = billingService.getByAppointment(400L);
+
+        assertThat(response.appointmentId()).isEqualTo(400L);
     }
 
     @Test

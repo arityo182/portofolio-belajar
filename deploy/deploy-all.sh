@@ -34,22 +34,27 @@ case "${1:-all}" in
     echo ""
     echo "━━━ Server 4: Chatbot + ML ━━━"
     scp docker-compose.svr4-python.yml $SVR4:~/medika/docker-compose.yml
-    rsync -avz ../chatbot-service/ $SVR4:~/medika/chatbot-service/ --exclude chroma_db
-    rsync -avz ../ml-service/ $SVR4:~/medika/ml-service/ --exclude models
+    rsync -avz ../chatbot-service/ $SVR4:~/medika/chatbot-service/ \
+      --exclude chroma_db --exclude venv --exclude .venv \
+      --exclude __pycache__ --exclude .env --exclude '.env.*'
+    rsync -avz ../ml-service/ $SVR4:~/medika/ml-service/ \
+      --exclude models --exclude venv --exclude .venv \
+      --exclude __pycache__ --exclude .env --exclude '.env.*'
     ssh $SVR4 "cd ~/medika && docker compose build && docker compose up -d"
     
     # 3. Backend
     echo ""
     echo "━━━ Server 2: Backend ━━━"
     scp docker-compose.svr2-backend.yml $SVR2:~/medika/docker-compose.yml
-    rsync -avz ../medikasentosa/ $SVR2:~/medika/medikasentosa/ --exclude .gradle --exclude build
+    rsync -avz ../medikasentosa/ $SVR2:~/medika/medikasentosa/ \
+      --exclude .gradle --exclude build --exclude .env --exclude '.env.*'
     ssh $SVR2 "cd ~/medika && docker compose build && docker compose up -d"
     
     # 4. Frontend
     echo ""
     echo "━━━ Server 3: Frontend ━━━"
     scp docker-compose.svr3-frontend.yml $SVR3:~/medika/docker-compose.yml
-    rsync -avz ../hospital-frontend/ $SVR3:~/medika/hospital-frontend/ --exclude node_modules --exclude dist
+    rsync -avz ../hospital-frontendjs/ $SVR3:~/medika/hospital-frontendjs/ --exclude node_modules --exclude dist
     ssh $SVR3 "cd ~/medika && docker compose build && docker compose up -d"
     
     # 5. GPU

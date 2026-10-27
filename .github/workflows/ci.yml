@@ -85,9 +85,9 @@ jobs:
             echo "⚠️  Model file NOT found — expected (too large for Git)"
           fi
 
-  # ─── Frontend Build & TypeCheck ────────────
+  # ─── Frontend Build & Test ─────────────────
   frontend-check:
-    name: Frontend — TypeScript + Build
+    name: Frontend — JavaScript + Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -97,25 +97,25 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: hospital-frontend/package-lock.json
+          cache-dependency-path: hospital-frontendjs/package-lock.json
 
       - name: Install dependencies
-        working-directory: hospital-frontend
+        working-directory: hospital-frontendjs
         run: npm ci
 
-      - name: TypeScript Check
-        working-directory: hospital-frontend
-        run: npx tsc --noEmit
+      - name: Test
+        working-directory: hospital-frontendjs
+        run: npm test
 
       - name: Build
-        working-directory: hospital-frontend
+        working-directory: hospital-frontendjs
         run: npm run build
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: hospital-frontend/dist/
+          path: hospital-frontendjs/dist/
           retention-days: 7
 
   # ─── Docker Build (Opsional) ──────────────
@@ -140,16 +140,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Build Frontend Deps Image
+        run: docker build -f hospital-frontendjs/Dockerfile.deps -t medika-frontend-deps:latest hospital-frontendjs
+
       - name: Build Frontend Image
-        uses: docker/build-push-action@v6
-        with:
-          context: hospital-frontend
-          file: hospital-frontend/Dockerfile
-          push: false
-          load: true
-          tags: medika-frontend:ci
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: docker build -f hospital-frontendjs/Dockerfile -t medika-frontendjs:ci hospital-frontendjs
 
       - name: Verify images
         run: docker images medika-*

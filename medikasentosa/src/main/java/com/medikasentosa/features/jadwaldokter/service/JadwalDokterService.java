@@ -6,6 +6,7 @@ import com.medikasentosa.features.jadwaldokter.dto.JadwalDokterRequest;
 import com.medikasentosa.features.jadwaldokter.dto.JadwalDokterResponse;
 import com.medikasentosa.features.jadwaldokter.entity.JadwalDokter;
 import com.medikasentosa.features.jadwaldokter.repository.JadwalDokterRepository;
+import com.medikasentosa.shared.exception.DuplicateResourceException;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,7 @@ public class JadwalDokterService {
         log.info("Creating jadwal dokter for dokterId={}", request.dokterId());
         Dokter dokter = findDokterOrThrow(request.dokterId());
         validateJam(request);
+        validateNoOverlap(dokter.getId(), request, null);
 
         JadwalDokter jadwal = JadwalDokter.builder()
                 .dokter(dokter)
@@ -70,6 +72,17 @@ public class JadwalDokterService {
      */
     public List<JadwalDokterResponse> getAll() {
         return jadwalDokterRepository.findAll()
+                .stream().map(this::toResponse).toList();
+    }
+
+    /**
+     * Mengambil seluruh jadwal aktif untuk konsumen publik (form booking).
+     * Jadwal nonaktif hanya tersedia melalui endpoint admin {@code /api/admin/jadwal}.
+     *
+     * @return daftar jadwal aktif
+     */
+    public List<JadwalDokterResponse> getAllActive() {
+        return jadwalDokterRepository.findByIsActiveTrue()
                 .stream().map(this::toResponse).toList();
     }
 
@@ -113,6 +126,7 @@ public class JadwalDokterService {
         log.info("Updating jadwal dokter id={}", id);
         JadwalDokter jadwal = findOrThrow(id);
         validateJam(request);
+        validateNoOverlap(jadwal.getDokter().getId(), request, id);
 
         jadwal.setHari(request.hari());
         jadwal.setJamMulai(request.jamMulai());
@@ -140,6 +154,21 @@ public class JadwalDokterService {
         if (!request.jamMulai().isBefore(request.jamSelesai())) {
             log.warn("Invalid jam: mulai={} selesai={}", request.jamMulai(), request.jamSelesai());
             throw new IllegalArgumentException("Jam mulai harus sebelum jam selesai");
+        }
+    }
+
+    /**
+     * Mencegah dokter memiliki dua jadwal aktif yang jamnya beririsan pada hari
+     * yang sama. Tanpa validasi ini, pasien dapat memesan dua slot yang bentrok.
+     */
+    private void validateNoOverlap(Long dokterId, JadwalDokterRequest request, Long excludeId) {
+        boolean overlaps = jadwalDokterRepository.existsOverlappingSchedule(
+                dokterId, request.hari(), request.jamMulai(), request.jamSelesai(), excludeId);
+        if (overlaps) {
+            log.warn("Jadwal overlap for dokterId={} hari={} {} - {}",
+                    dokterId, request.hari(), request.jamMulai(), request.jamSelesai());
+            throw new DuplicateResourceException(
+                    "Dokter sudah memiliki jadwal aktif pada hari dan jam yang beririsan");
         }
     }
 

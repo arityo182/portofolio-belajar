@@ -1,6 +1,7 @@
 package com.medikasentosa.features.screening.dto;
 
 import java.time.Instant;
+import java.util.Map;
 
 /**
  * DTO respons hasil screening yang dikembalikan ke klien,
@@ -14,6 +15,7 @@ public record ScreeningResponse(
         Long id,
         String label,
         Double confidence,
+        Map<String, Double> probabilities,
         String risk,
         String gradcamImage,
         Long latencyMs,

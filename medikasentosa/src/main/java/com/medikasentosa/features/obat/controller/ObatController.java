@@ -3,6 +3,7 @@ package com.medikasentosa.features.obat.controller;
 import com.medikasentosa.features.obat.dto.ObatRequest;
 import com.medikasentosa.features.obat.dto.ObatResponse;
 import com.medikasentosa.features.obat.service.ObatService;
+import com.medikasentosa.shared.security.AuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -29,22 +30,33 @@ import java.util.List;
 public class ObatController {
 
     private final ObatService obatService;
+    private final AuthorizationService authorization;
 
-    public ObatController(ObatService obatService) {
+    public ObatController(ObatService obatService, AuthorizationService authorization) {
         this.obatService = obatService;
+        this.authorization = authorization;
     }
 
     /**
-     * Mengambil seluruh daftar obat.
+     * Mengambil daftar obat. Secara default hanya obat aktif yang dikembalikan;
+     * admin dapat meminta seluruh data (termasuk nonaktif) dengan
+     * {@code includeInactive=true} untuk halaman manajemen obat.
      *
-     * @return daftar semua obat
+     * @param includeInactive sertakan obat nonaktif (khusus admin)
+     * @return daftar obat
      */
     @GetMapping
-    @Operation(summary = "Ambil semua obat",
-               description = "Mengembalikan seluruh daftar obat yang tersimpan.")
+    @Operation(summary = "Ambil daftar obat",
+               description = "Mengembalikan obat aktif. Admin dapat menyertakan obat "
+                       + "nonaktif dengan parameter includeInactive=true.")
     @ApiResponse(responseCode = "200", description = "Daftar obat berhasil diambil")
-    public List<ObatResponse> getAll() {
-        return obatService.getAll();
+    public List<ObatResponse> getAll(
+            @RequestParam(name = "includeInactive", defaultValue = "false") boolean includeInactive) {
+        if (includeInactive) {
+            authorization.requireAdmin();
+            return obatService.getAll();
+        }
+        return obatService.getAllActive();
     }
 
     /**

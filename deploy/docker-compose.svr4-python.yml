@@ -1,7 +1,8 @@
 # ============================================
 # SERVER 4 — Chatbot + ML Service
-# IP: 10.0.1.30 (contoh)
+# IP: 10.0.1.30 (contoh, sesuaikan)
 # ============================================
+# Kedua layanan internal: hanya backend (10.0.1.20) yang boleh memanggil.
 services:
   chatbot:
     build:
@@ -11,16 +12,25 @@ services:
     container_name: prod-chatbot
     restart: always
     ports:
-      - "8002:8002"
+      - "10.0.1.30:8002:8002"
     environment:
+      APP_ENV: production
+      ENABLE_DOCS: "false"
+      INTERNAL_API_KEY: ${CHATBOT_INTERNAL_API_KEY:?CHATBOT_INTERNAL_API_KEY wajib diisi}
       VLLM_BASE_URL: http://10.0.1.40:8100
       VLLM_MODEL: Qwen/Qwen2.5-14B-Instruct
-      VLLM_API_KEY: ${VLLM_API_KEY:-no-key}
+      VLLM_API_KEY: ${VLLM_API_KEY:?VLLM_API_KEY wajib diisi}
+      MAX_CONCURRENT_REQUESTS: ${CHATBOT_MAX_CONCURRENCY:-8}
+      RATE_LIMIT_PER_MINUTE: ${CHATBOT_RATE_LIMIT:-30}
     volumes:
       - ../chatbot-service/knowledge_base:/app/knowledge_base:ro
       - chroma_data:/app/chroma_db
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/chat/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8002/chat/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -33,7 +43,18 @@ services:
     container_name: prod-ml-service
     restart: always
     ports:
-      - "8001:8001"
+      - "10.0.1.30:8001:8001"
+    environment:
+      APP_ENV: production
+      ENABLE_DOCS: "false"
+      INTERNAL_API_KEY: ${ML_INTERNAL_API_KEY:?ML_INTERNAL_API_KEY wajib diisi}
+      MAX_UPLOAD_BYTES: "10485760"
+      MAX_CONCURRENCY: ${ML_MAX_CONCURRENCY:-2}
+      INFERENCE_TIMEOUT_SECONDS: ${ML_INFERENCE_TIMEOUT:-30}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8001/health"]
       interval: 30s

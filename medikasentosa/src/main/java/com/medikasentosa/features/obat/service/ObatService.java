@@ -74,6 +74,17 @@ public class ObatService {
     }
 
     /**
+     * Mengambil daftar obat aktif untuk konsumen publik/resep baru.
+     * Obat nonaktif tidak boleh muncul di pilihan dokter.
+     *
+     * @return daftar obat aktif
+     */
+    public List<ObatResponse> getAllActive() {
+        return obatRepository.findByIsActiveTrue()
+                .stream().map(this::toResponse).toList();
+    }
+
+    /**
      * Mengambil satu obat berdasarkan ID.
      *
      * @param id ID obat yang dicari

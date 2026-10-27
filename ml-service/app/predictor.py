@@ -5,6 +5,8 @@ Modul ini memuat model EfficientNetV2 hasil fine-tuning sekali saat import
 inferensi pada citra X-ray yang telah dipreprocessing.
 """
 
+import hashlib
+import hmac
 import os
 import tensorflow as tf
 import numpy as np
@@ -14,6 +16,32 @@ import numpy as np
 # cepat. `model` diekspor dan dipakai ulang oleh endpoint serta Grad-CAM.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_PATH = os.getenv("MODEL_PATH", os.path.join(BASE_DIR, "models", "EfficientNetV2_FineTuning.keras"))
+MODEL_SHA256 = os.getenv("MODEL_SHA256", "").strip().lower()
+
+
+def _verify_model_checksum(path: str) -> None:
+    """Memverifikasi checksum model bila MODEL_SHA256 dikonfigurasi.
+
+    Pemeriksaan ini mendeteksi model yang tertukar atau dimodifikasi di
+    penyimpanan. Bila env tidak diisi, verifikasi dilewati (kompatibilitas
+    deployment lama).
+
+    Raises:
+        RuntimeError: Bila checksum tidak cocok.
+    """
+    if not MODEL_SHA256:
+        return
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    if not hmac.compare_digest(digest.hexdigest(), MODEL_SHA256):
+        raise RuntimeError(
+            "Checksum model tidak cocok. Periksa MODEL_PATH/MODEL_SHA256."
+        )
+
+
+_verify_model_checksum(MODEL_PATH)
 model = tf.keras.models.load_model(MODEL_PATH)
 
 # LABEL — urutan indeks harus sama dengan urutan output model.

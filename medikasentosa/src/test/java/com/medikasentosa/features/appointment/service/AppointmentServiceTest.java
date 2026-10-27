@@ -1,6 +1,5 @@
 package com.medikasentosa.features.appointment.service;
 
-import com.medikasentosa.features.antrian.dto.AntrianResponse;
 import com.medikasentosa.features.antrian.repository.AntrianRepository;
 import com.medikasentosa.features.antrian.service.AntrianService;
 import com.medikasentosa.features.appointment.dto.AppointmentRequest;
@@ -28,18 +27,25 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentServiceTest {
+
+    /** Tanggal Senin di masa depan; dipakai agar tidak tertolak validasi tanggal lampau. */
+    private static final LocalDate FUTURE_SENIN =
+            LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY));
 
     @Mock
     private AppointmentRepository appointmentRepository;
@@ -84,19 +90,19 @@ class AppointmentServiceTest {
                 .jamMulai(LocalTime.of(8, 0)).jamSelesai(LocalTime.of(14, 0)).kuota(10).isActive(true).build();
 
         appointment = Appointment.builder().id(100L).pasien(pasien).dokter(dokter).jadwal(jadwal)
-                .tanggal(LocalDate.of(2024, 7, 22)).status(StatusAppointment.MENUNGGU)
+                .tanggal(FUTURE_SENIN).status(StatusAppointment.MENUNGGU)
                 .keluhan("Nyeri dada").build();
 
-        request = new AppointmentRequest(1L, 3L, LocalDate.of(2024, 7, 22), "Nyeri dada");
+        request = new AppointmentRequest(1L, 3L, FUTURE_SENIN, "Nyeri dada");
     }
 
     @Test
     void create_success_createsAppointmentAndAntrian() {
         when(pasienRepository.findById(1L)).thenReturn(Optional.of(pasien));
-        when(jadwalDokterRepository.findById(3L)).thenReturn(Optional.of(jadwal));
-        when(appointmentRepository.existsByPasienIdAndJadwalAndTanggal(1L, jadwal, LocalDate.of(2024, 7, 22)))
+        when(jadwalDokterRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(jadwal));
+        when(appointmentRepository.existsActiveByPasienIdAndJadwalAndTanggal(1L, jadwal, FUTURE_SENIN))
                 .thenReturn(false);
-        when(appointmentRepository.countByJadwalAndTanggal(jadwal, LocalDate.of(2024, 7, 22))).thenReturn(3L);
+        when(appointmentRepository.countActiveByJadwalAndTanggal(jadwal, FUTURE_SENIN)).thenReturn(3L);
         when(appointmentRepository.save(any(Appointment.class))).thenAnswer(inv -> {
             Appointment a = inv.getArgument(0);
             a.setId(100L);
@@ -109,6 +115,8 @@ class AppointmentServiceTest {
         assertThat(response.pasienId()).isEqualTo(1L);
         assertThat(response.status()).isEqualTo(StatusAppointment.MENUNGGU);
         verify(antrianService).generateAntrian(100L);
+        verify(notificationService).broadcastNewAppointment(
+                eq(100L), eq(1L), eq(10L), eq("Rina Wijaya"), eq(FUTURE_SENIN), eq("Poli Jantung"));
     }
 
     @Test
@@ -123,12 +131,26 @@ class AppointmentServiceTest {
     }
 
     @Test
+    void create_fails_tanggalLampau() {
+        AppointmentRequest req = new AppointmentRequest(
+                1L, 3L, LocalDate.now().minusDays(1), "Nyeri dada");
+        when(pasienRepository.findById(1L)).thenReturn(Optional.of(pasien));
+
+        assertThatThrownBy(() -> appointmentService.create(req))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Tanggal janji temu tidak boleh di masa lalu");
+
+        verify(jadwalDokterRepository, never()).findByIdForUpdate(any());
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
     void create_fails_quotaFull() {
         when(pasienRepository.findById(1L)).thenReturn(Optional.of(pasien));
-        when(jadwalDokterRepository.findById(3L)).thenReturn(Optional.of(jadwal));
-        when(appointmentRepository.existsByPasienIdAndJadwalAndTanggal(1L, jadwal, LocalDate.of(2024, 7, 22)))
+        when(jadwalDokterRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(jadwal));
+        when(appointmentRepository.existsActiveByPasienIdAndJadwalAndTanggal(1L, jadwal, FUTURE_SENIN))
                 .thenReturn(false);
-        when(appointmentRepository.countByJadwalAndTanggal(jadwal, LocalDate.of(2024, 7, 22))).thenReturn(10L);
+        when(appointmentRepository.countActiveByJadwalAndTanggal(jadwal, FUTURE_SENIN)).thenReturn(10L);
 
         assertThatThrownBy(() -> appointmentService.create(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -166,13 +188,13 @@ class AppointmentServiceTest {
         AppointmentResponse response = appointmentService.updateStatus(100L, StatusAppointment.DIPERIKSA);
 
         assertThat(response.status()).isEqualTo(StatusAppointment.DIPERIKSA);
-        verify(notificationService).broadcastStatusAppointment(100L, "DIPERIKSA", 1L);
+        verify(notificationService).broadcastStatusAppointment(100L, 1L, 10L, "DIPERIKSA");
     }
 
     @Test
     void create_fails_jadwalNotFound() {
         when(pasienRepository.findById(1L)).thenReturn(Optional.of(pasien));
-        when(jadwalDokterRepository.findById(3L)).thenReturn(Optional.empty());
+        when(jadwalDokterRepository.findByIdForUpdate(3L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> appointmentService.create(request))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -185,7 +207,7 @@ class AppointmentServiceTest {
     void create_fails_jadwalTidakAktif() {
         jadwal.setIsActive(false);
         when(pasienRepository.findById(1L)).thenReturn(Optional.of(pasien));
-        when(jadwalDokterRepository.findById(3L)).thenReturn(Optional.of(jadwal));
+        when(jadwalDokterRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(jadwal));
 
         assertThatThrownBy(() -> appointmentService.create(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -196,10 +218,11 @@ class AppointmentServiceTest {
 
     @Test
     void create_fails_hariTidakCocok() {
-        // Jadwal SENIN, tapi tanggal adalah RABU
-        AppointmentRequest req = new AppointmentRequest(1L, 3L, LocalDate.of(2024, 7, 24), "Sakit kepala");
+        // Jadwal SENIN, tapi tanggal adalah Rabu (dua hari setelah Senin).
+        AppointmentRequest req = new AppointmentRequest(
+                1L, 3L, FUTURE_SENIN.plusDays(2), "Sakit kepala");
         when(pasienRepository.findById(1L)).thenReturn(Optional.of(pasien));
-        when(jadwalDokterRepository.findById(3L)).thenReturn(Optional.of(jadwal));
+        when(jadwalDokterRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(jadwal));
 
         assertThatThrownBy(() -> appointmentService.create(req))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -211,8 +234,8 @@ class AppointmentServiceTest {
     @Test
     void create_fails_doubleBooking() {
         when(pasienRepository.findById(1L)).thenReturn(Optional.of(pasien));
-        when(jadwalDokterRepository.findById(3L)).thenReturn(Optional.of(jadwal));
-        when(appointmentRepository.existsByPasienIdAndJadwalAndTanggal(1L, jadwal, LocalDate.of(2024, 7, 22)))
+        when(jadwalDokterRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(jadwal));
+        when(appointmentRepository.existsActiveByPasienIdAndJadwalAndTanggal(1L, jadwal, FUTURE_SENIN))
                 .thenReturn(true);
 
         assertThatThrownBy(() -> appointmentService.create(request))

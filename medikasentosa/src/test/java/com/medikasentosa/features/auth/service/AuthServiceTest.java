@@ -7,7 +7,6 @@ import com.medikasentosa.features.auth.entity.Role;
 import com.medikasentosa.features.auth.entity.User;
 import com.medikasentosa.features.auth.repository.UserRepository;
 import com.medikasentosa.shared.exception.DuplicateResourceException;
-import com.medikasentosa.shared.exception.ResourceNotFoundException;
 import com.medikasentosa.shared.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -53,14 +54,14 @@ class AuthServiceTest {
                 .isActive(true)
                 .build();
 
-        registerRequest = new RegisterRequest("Ari Hidayat", "ari@email.com", "arie12345");
-        loginRequest = new LoginRequest("ari@email.com", "arie12345");
+        registerRequest = new RegisterRequest("Ari Hidayat", "ari@email.com", "TestPass12345!");
+        loginRequest = new LoginRequest("ari@email.com", "TestPass12345!");
     }
 
     @Test
     void register_success_hashesPasswordAndReturnsToken() {
         when(userRepository.existsByEmail("ari@email.com")).thenReturn(false);
-        when(passwordEncoder.encode("arie12345")).thenReturn("hashed_pass");
+        when(passwordEncoder.encode("TestPass12345!")).thenReturn("hashed_pass");
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(jwtService.generateToken(anyString())).thenReturn("mock-jwt-token");
 
@@ -69,7 +70,7 @@ class AuthServiceTest {
         assertThat(response.token()).isEqualTo("mock-jwt-token");
         assertThat(response.user().email()).isEqualTo("ari@email.com");
         assertThat(response.user().role()).isEqualTo(Role.PASIEN);
-        verify(passwordEncoder).encode("arie12345");
+        verify(passwordEncoder).encode("TestPass12345!");
         verify(userRepository).save(any(User.class));
     }
 
@@ -87,7 +88,7 @@ class AuthServiceTest {
     @Test
     void login_success_returnsToken() {
         when(userRepository.findByEmail("ari@email.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("arie12345", "hashed_pass")).thenReturn(true);
+        when(passwordEncoder.matches("TestPass12345!", "hashed_pass")).thenReturn(true);
         when(jwtService.generateToken(anyString())).thenReturn("mock-jwt-token");
 
         AuthResponse response = authService.login(loginRequest);
@@ -99,10 +100,10 @@ class AuthServiceTest {
     @Test
     void login_fails_wrongPassword() {
         when(userRepository.findByEmail("ari@email.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("arie12345", "hashed_pass")).thenReturn(false);
+        when(passwordEncoder.matches("TestPass12345!", "hashed_pass")).thenReturn(false);
 
         assertThatThrownBy(() -> authService.login(loginRequest))
-                .isInstanceOf(ResourceNotFoundException.class)
+                .isInstanceOf(BadCredentialsException.class)
                 .hasMessage("Email atau password salah");
     }
 
@@ -110,10 +111,10 @@ class AuthServiceTest {
     void login_fails_inactiveAccount() {
         user.setIsActive(false);
         when(userRepository.findByEmail("ari@email.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("arie12345", "hashed_pass")).thenReturn(true);
+        when(passwordEncoder.matches("TestPass12345!", "hashed_pass")).thenReturn(true);
 
         assertThatThrownBy(() -> authService.login(loginRequest))
-                .isInstanceOf(ResourceNotFoundException.class)
+                .isInstanceOf(DisabledException.class)
                 .hasMessage("Akun Anda dinonaktifkan. Hubungi admin.");
     }
 }

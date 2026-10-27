@@ -6,6 +6,8 @@ import com.medikasentosa.features.jadwaldokter.entity.JadwalDokter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,25 +23,43 @@ import java.util.List;
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
     /**
-     * Menghitung jumlah appointment pada sebuah jadwal di tanggal tertentu
-     * (dipakai untuk validasi kuota).
+     * Menghitung jumlah appointment aktif (bukan BATAL) pada sebuah jadwal di
+     * tanggal tertentu. Appointment yang dibatalkan tidak boleh menghabiskan
+     * kuota sehingga slotnya dapat dipesan pasien lain.
      *
      * @param jadwal  jadwal praktik yang dihitung
      * @param tanggal tanggal janji temu
-     * @return jumlah appointment yang cocok
+     * @return jumlah appointment aktif yang cocok
      */
-    long countByJadwalAndTanggal(JadwalDokter jadwal, LocalDate tanggal);
+    @Query("""
+            select count(a) from Appointment a
+            where a.jadwal = :jadwal
+              and a.tanggal = :tanggal
+              and a.status <> com.medikasentosa.features.appointment.entity.StatusAppointment.BATAL
+            """)
+    long countActiveByJadwalAndTanggal(@Param("jadwal") JadwalDokter jadwal,
+                                       @Param("tanggal") LocalDate tanggal);
 
     /**
-     * Mengecek apakah seorang pasien sudah memiliki appointment pada jadwal
-     * dan tanggal yang sama (dipakai untuk mencegah duplikasi booking).
+     * Mengecek apakah seorang pasien sudah memiliki appointment aktif (bukan
+     * BATAL) pada jadwal dan tanggal yang sama. Appointment yang dibatalkan
+     * tidak menghalangi pasien untuk memesan ulang.
      *
      * @param pasienId ID pasien
      * @param jadwal   jadwal praktik
      * @param tanggal  tanggal janji temu
-     * @return {@code true} bila sudah ada appointment yang cocok
+     * @return {@code true} bila sudah ada appointment aktif yang cocok
      */
-    boolean existsByPasienIdAndJadwalAndTanggal(Long pasienId, JadwalDokter jadwal, LocalDate tanggal);
+    @Query("""
+            select case when count(a) > 0 then true else false end from Appointment a
+            where a.pasien.id = :pasienId
+              and a.jadwal = :jadwal
+              and a.tanggal = :tanggal
+              and a.status <> com.medikasentosa.features.appointment.entity.StatusAppointment.BATAL
+            """)
+    boolean existsActiveByPasienIdAndJadwalAndTanggal(@Param("pasienId") Long pasienId,
+                                                      @Param("jadwal") JadwalDokter jadwal,
+                                                      @Param("tanggal") LocalDate tanggal);
 
     /**
      * Mengambil seluruh appointment milik seorang pasien.
@@ -48,6 +68,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
      * @return daftar appointment pasien tersebut
      */
     List<Appointment> findByPasienId(Long pasienId);
+
+    /** Apakah dokter pernah menangani pasien ini (dasar akses clinical). */
+    boolean existsByPasienIdAndDokterId(Long pasienId, Long dokterId);
 
     Page<Appointment> findByPasienId(Long pasienId, Pageable pageable);
 

@@ -2,6 +2,7 @@ package com.medikasentosa.features.pembayaran.controller;
 
 import com.medikasentosa.features.pembayaran.dto.*;
 import com.medikasentosa.features.pembayaran.service.PembayaranService;
+import com.medikasentosa.shared.security.AuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -24,7 +25,12 @@ import java.util.List;
 public class PembayaranController {
 
     private final PembayaranService service;
-    public PembayaranController(PembayaranService s) { this.service = s; }
+    private final AuthorizationService authorization;
+
+    public PembayaranController(PembayaranService s, AuthorizationService authorization) {
+        this.service = s;
+        this.authorization = authorization;
+    }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -34,6 +40,7 @@ public class PembayaranController {
     @GetMapping("/billing/{billingId}")
     @Operation(summary = "Pembayaran by billing")
     public PembayaranResponse getByBilling(@PathVariable Long billingId) {
+        authorization.requireBillingAccess(billingId);
         return service.getByBilling(billingId);
     }
 
@@ -42,6 +49,7 @@ public class PembayaranController {
                description = "Validasi: billing ada, belum lunas, jumlah >= total. "
                        + "Sukses → billing LUNAS.")
     public ResponseEntity<PembayaranResponse> proses(@Valid @RequestBody PembayaranRequest req) {
+        authorization.requireBillingPayment(req.billingId());
         return ResponseEntity.status(HttpStatus.CREATED).body(service.proses(req));
     }
 }

@@ -4,6 +4,7 @@ import com.medikasentosa.features.appointment.dto.AppointmentRequest;
 import com.medikasentosa.features.appointment.dto.AppointmentResponse;
 import com.medikasentosa.features.appointment.entity.StatusAppointment;
 import com.medikasentosa.features.appointment.service.AppointmentService;
+import com.medikasentosa.shared.security.AuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,9 +33,11 @@ import java.util.List;
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
+    private final AuthorizationService authorization;
 
-    public AppointmentController(AppointmentService appointmentService) {
+    public AppointmentController(AppointmentService appointmentService, AuthorizationService authorization) {
         this.appointmentService = appointmentService;
+        this.authorization = authorization;
     }
 
     /**
@@ -42,16 +46,18 @@ public class AppointmentController {
      * @return daftar semua appointment
      */
     @GetMapping
-    @Operation(summary = "Ambil semua appointment",
-               description = "Mengembalikan seluruh daftar janji temu yang tersimpan.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Ambil semua appointment (admin)",
+               description = "Mengembalikan seluruh daftar janji temu. Khusus admin.")
     @ApiResponse(responseCode = "200", description = "Daftar appointment berhasil diambil")
     public List<AppointmentResponse> getAll() {
         return appointmentService.getAll();
     }
 
     @GetMapping("/paginated")
-    @Operation(summary = "Ambil semua appointment (paginated)",
-               description = "Mengembalikan daftar appointment dengan pagination.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Ambil semua appointment (paginated, admin)",
+               description = "Mengembalikan daftar appointment dengan pagination. Khusus admin.")
     @ApiResponse(responseCode = "200", description = "Daftar appointment berhasil diambil")
     public Page<AppointmentResponse> getAllPaginated(Pageable pageable) {
         return appointmentService.getAll(pageable);
@@ -71,6 +77,7 @@ public class AppointmentController {
         @ApiResponse(responseCode = "404", description = "Appointment tidak ditemukan")
     })
     public AppointmentResponse getById(@PathVariable Long id) {
+        authorization.requireAppointmentAccess(id);
         return appointmentService.getById(id);
     }
 
@@ -85,6 +92,7 @@ public class AppointmentController {
                description = "Mengembalikan seluruh janji temu milik pasien tertentu.")
     @ApiResponse(responseCode = "200", description = "Daftar appointment berhasil diambil")
     public List<AppointmentResponse> getByPasien(@PathVariable Long pasienId) {
+        authorization.requirePasienAccess(pasienId);
         return appointmentService.getByPasien(pasienId);
     }
 
@@ -93,6 +101,7 @@ public class AppointmentController {
                description = "Mengembalikan janji temu milik pasien tertentu dengan pagination.")
     @ApiResponse(responseCode = "200", description = "Daftar appointment berhasil diambil")
     public Page<AppointmentResponse> getByPasienPaginated(@PathVariable Long pasienId, Pageable pageable) {
+        authorization.requirePasienAccess(pasienId);
         return appointmentService.getByPasien(pasienId, pageable);
     }
 
@@ -107,6 +116,7 @@ public class AppointmentController {
                description = "Mengembalikan seluruh janji temu milik dokter tertentu.")
     @ApiResponse(responseCode = "200", description = "Daftar appointment berhasil diambil")
     public List<AppointmentResponse> getByDokter(@PathVariable Long dokterId) {
+        authorization.requireDokterSelfOrAdmin(dokterId);
         return appointmentService.getByDokter(dokterId);
     }
 
@@ -128,6 +138,7 @@ public class AppointmentController {
         @ApiResponse(responseCode = "409", description = "Pasien sudah memesan jadwal dan tanggal yang sama")
     })
     public ResponseEntity<AppointmentResponse> create(@Valid @RequestBody AppointmentRequest request) {
+        authorization.requireAppointmentCreate(request.pasienId());
         AppointmentResponse response = appointmentService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -150,6 +161,7 @@ public class AppointmentController {
     })
     public AppointmentResponse updateStatus(@PathVariable Long id,
                                             @RequestParam StatusAppointment status) {
+        authorization.requireAppointmentStatusChange(id, status);
         return appointmentService.updateStatus(id, status);
     }
 }

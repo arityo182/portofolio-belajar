@@ -4,9 +4,12 @@ import com.medikasentosa.features.billing.entity.Billing;
 import com.medikasentosa.features.billing.entity.StatusBilling;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
+import java.util.Optional;
 
 /** Repository for {@link Billing}. */
 public interface BillingRepository extends JpaRepository<Billing, Long> {
     List<Billing> findByPasienId(Long pasienId);
     List<Billing> findByStatus(StatusBilling status);
+    Optional<Billing> findByAppointmentId(Long appointmentId);
+    boolean existsByAppointmentId(Long appointmentId);
 }

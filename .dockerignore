@@ -43,7 +43,8 @@ setup.sh
 
 # Environment
 .env
-.env.local
+.env.*
+CREDENTIALS.md
 
 # OS
 .DS_Store

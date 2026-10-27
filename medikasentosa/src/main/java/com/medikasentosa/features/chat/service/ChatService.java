@@ -44,6 +44,9 @@ public class ChatService {
     @Value("${app.chatbot.url:http://localhost:8002}")
     private String chatbotUrl;
 
+    @Value("${app.chatbot.api-key:}")
+    private String chatbotApiKey;
+
     public ChatService(ChatSessionRepository sessionRepo, ChatMessageRepository messageRepo,
                        UserRepository userRepo, PoliRepository poliRepo, DokterRepository dokterRepo,
                        JadwalDokterRepository jadwalRepo, RekamMedisRepository rekamMedisRepo,
@@ -89,17 +92,16 @@ public class ChatService {
         userMsg.setContent(req.message());
         messageRepo.save(userMsg);
 
-        // 3. Ambil history 10 pesan terakhir
+        // 3. Ambil history terakhir (dibatasi agar prompt tidak membengkak)
         List<ChatMessage> history = messageRepo.findBySessionIdOrderByCreatedAtAsc(session.getId());
-        List<Map<String, String>> sessionHistory = history.stream()
-                .map(m -> Map.of("role", m.getRole().name().toLowerCase(), "content", m.getContent()))
-                .collect(Collectors.toList());
+        List<Map<String, String>> sessionHistory = sanitizeHistory(history);
 
         // 4. Build context dari DB
         ContextData context = buildContext(userId);
 
-        // 5. Panggil chatbot-service
-        String sentaResponse = callChatbot(req.message(), sessionHistory, context);
+        // 5. Panggil chatbot-service dengan identitas pemilik sesi untuk rate limit
+        String sentaResponse = callChatbot(
+                req.message(), sessionHistory, context, "user-" + userId);
 
         // 6. Simpan pesan ASSISTANT
         ChatMessage botMsg = new ChatMessage();
@@ -153,18 +155,23 @@ public class ChatService {
 
     private ContextData buildContext(Long userId) {
         var poli = poliRepo.findByIsActiveTrue().stream()
-                .map(p -> Map.<String, Object>of("id", p.getId(), "nama", p.getNama(), "deskripsi", p.getDeskripsi() != null ? p.getDeskripsi() : ""))
+                .map(p -> Map.<String, Object>of("id", p.getId(), "nama", safe(p.getNama()),
+                        "deskripsi", safe(p.getDeskripsi())))
                 .toList();
         var dokter = dokterRepo.findAll().stream()
                 .map(d -> Map.<String, Object>of(
-                        "id", d.getId(), "nama", d.getUser().getNama(),
-                        "spesialisasi", d.getSpesialisasi(), "namaPoli", d.getPoli().getNama()))
+                        "id", d.getId(), "nama", safe(d.getUser().getNama()),
+                        "spesialisasi", safe(d.getSpesialisasi()),
+                        "namaPoli", d.getPoli() != null ? safe(d.getPoli().getNama()) : ""))
                 .toList();
         var jadwal = jadwalRepo.findByIsActiveTrue().stream()
                 .map(j -> Map.<String, Object>of(
-                        "id", j.getId(), "namaDokter", j.getDokter().getUser().getNama(),
-                        "hari", j.getHari().name(), "jamMulai", j.getJamMulai().toString(),
-                        "jamSelesai", j.getJamSelesai().toString(), "kuota", j.getKuota()))
+                        "id", j.getId(),
+                        "namaDokter", j.getDokter() != null ? safe(j.getDokter().getUser().getNama()) : "",
+                        "hari", j.getHari() != null ? j.getHari().name() : "",
+                        "jamMulai", j.getJamMulai() != null ? j.getJamMulai().toString() : "",
+                        "jamSelesai", j.getJamSelesai() != null ? j.getJamSelesai().toString() : "",
+                        "kuota", j.getKuota() != null ? j.getKuota() : 0))
                 .toList();
         Map<String, Object> rm = null;
         var pasienOpt = pasienRepo.findByUserId(userId);
@@ -179,7 +186,8 @@ public class ChatService {
         return new ContextData(poli, dokter, jadwal, rm);
     }
 
-    private String callChatbot(String message, List<Map<String, String>> history, ContextData context) {
+    private String callChatbot(String message, List<Map<String, String>> history,
+                               ContextData context, String clientKey) {
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("message", message);
@@ -189,6 +197,12 @@ public class ChatService {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
+            if (chatbotApiKey != null && !chatbotApiKey.isBlank()) {
+                headers.set("X-Internal-API-Key", chatbotApiKey);
+            }
+            if (clientKey != null && !clientKey.isBlank()) {
+                headers.set("X-Client-Key", clientKey);
+            }
             var entity = new HttpEntity<>(body, headers);
 
             ResponseEntity<Map> response = restTemplate.postForEntity(
@@ -204,7 +218,29 @@ public class ChatService {
     }
 
     private String truncate(String text, int max) {
+        if (text == null) {
+            return "";
+        }
         return text.length() <= max ? text : text.substring(0, max - 3) + "...";
+    }
+
+    /** Null-safe string untuk nilai yang dikirim ke chatbot (Map.of menolak null). */
+    private String safe(String value) {
+        return value != null ? value : "";
+    }
+
+    /**
+     * Batasi riwayat yang dikirim ke chatbot: maksimum 20 pesan terakhir dan
+     * maksimum 2000 karakter per pesan (sama dengan validasi chatbot-service).
+     */
+    private List<Map<String, String>> sanitizeHistory(List<ChatMessage> history) {
+        int from = Math.max(0, history.size() - 20);
+        return history.subList(from, history.size()).stream()
+                .map(m -> Map.of(
+                        "role", "ASSISTANT".equalsIgnoreCase(m.getRole().name())
+                                ? "assistant" : "user",
+                        "content", truncate(m.getContent(), 2000)))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -216,28 +252,55 @@ public class ChatService {
         // Build context publik (tanpa data personal)
         ContextData context = buildPublicContext();
 
-        // Panggil chatbot-service
-        String response = callChatbot(req.message(), req.sessionHistory(), context);
+        // Sanitasi riwayat dari client (tidak dipercaya) sebelum diteruskan.
+        List<Map<String, String>> history = sanitizeRawHistory(req.sessionHistory());
+
+        // Panggil chatbot-service (tanpa data pasien; key publik dibatasi global)
+        String response = callChatbot(req.message(), history, context, "public");
 
         return new PublicChatResponse(response);
     }
 
     private ContextData buildPublicContext() {
         var poli = poliRepo.findByIsActiveTrue().stream()
-                .map(p -> Map.<String, Object>of("id", p.getId(), "nama", p.getNama(),
-                        "deskripsi", p.getDeskripsi() != null ? p.getDeskripsi() : ""))
+                .map(p -> Map.<String, Object>of("id", p.getId(), "nama", safe(p.getNama()),
+                        "deskripsi", safe(p.getDeskripsi())))
                 .toList();
         var dokter = dokterRepo.findAll().stream()
                 .map(d -> Map.<String, Object>of(
-                        "id", d.getId(), "nama", d.getUser().getNama(),
-                        "spesialisasi", d.getSpesialisasi(), "namaPoli", d.getPoli().getNama()))
+                        "id", d.getId(), "nama", safe(d.getUser().getNama()),
+                        "spesialisasi", safe(d.getSpesialisasi()),
+                        "namaPoli", d.getPoli() != null ? safe(d.getPoli().getNama()) : ""))
                 .toList();
         var jadwal = jadwalRepo.findByIsActiveTrue().stream()
                 .map(j -> Map.<String, Object>of(
-                        "id", j.getId(), "namaDokter", j.getDokter().getUser().getNama(),
-                        "hari", j.getHari().name(), "jamMulai", j.getJamMulai().toString(),
-                        "jamSelesai", j.getJamSelesai().toString(), "kuota", j.getKuota()))
+                        "id", j.getId(),
+                        "namaDokter", j.getDokter() != null ? safe(j.getDokter().getUser().getNama()) : "",
+                        "hari", j.getHari() != null ? j.getHari().name() : "",
+                        "jamMulai", j.getJamMulai() != null ? j.getJamMulai().toString() : "",
+                        "jamSelesai", j.getJamSelesai() != null ? j.getJamSelesai().toString() : "",
+                        "kuota", j.getKuota() != null ? j.getKuota() : 0))
                 .toList();
         return new ContextData(poli, dokter, jadwal, null);
+    }
+
+    /** Sanitasi riwayat publik: hanya role user/assistant, maks 20 item. */
+    private List<Map<String, String>> sanitizeRawHistory(List<Map<String, String>> raw) {
+        if (raw == null || raw.isEmpty()) {
+            return List.of();
+        }
+        int from = Math.max(0, raw.size() - 20);
+        return raw.subList(from, raw.size()).stream()
+                .filter(item -> item != null)
+                .map(item -> {
+                    String role = item.getOrDefault("role", "user");
+                    if (!"assistant".equalsIgnoreCase(role)) {
+                        role = "user";
+                    }
+                    return Map.of(
+                            "role", role,
+                            "content", truncate(item.getOrDefault("content", ""), 2000));
+                })
+                .collect(Collectors.toList());
     }
 }

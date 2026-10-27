@@ -20,7 +20,7 @@ collection:
   body:
     mimeType: application/json
     text: "{\n  \"nama\": \"Ari Test\",\n  \"email\": \"ari@test.com\",\n  \"password\"\
-      : \"arie12345\"\n}"
+      : \"GantiPasswordAnda12\"\n}"
   headers:
   - name: Content-Type
     value: application/json
@@ -112,7 +112,7 @@ collection:
   method: POST
   body:
     mimeType: application/json
-    text: "{\n  \"email\": \"ari@test.com\",\n  \"password\": \"arie12345\"\n}"
+    text: "{\n  \"email\": \"ari@test.com\",\n  \"password\": \"GantiPasswordAnda12\"\n}"
   headers:
   - name: Content-Type
     value: application/json
@@ -220,7 +220,7 @@ collection:
         **Keterangan :**
 
 
-        email harus unik, password minimal 6 karakter. Response 201:
+        email harus unik, password minimal 12 karakter serta mengandung huruf dan angka. Response 201:
 
         { token, user }. Error 409: email sudah terdaftar.'
       sortKey: -1782367883315
@@ -228,7 +228,7 @@ collection:
     body:
       mimeType: application/json
       text: "{\n  \"nama\": \"Ari Test\",\n  \"email\": \"ari@test.com\",\n  \"password\"\
-        : \"arie12345\"\n}"
+        : \"GantiPasswordAnda12\"\n}"
     headers:
     - name: Content-Type
       value: application/json
@@ -285,7 +285,7 @@ collection:
     method: POST
     body:
       mimeType: application/json
-      text: "{\n  \"email\": \"ari@test.com\",\n  \"password\": \"arie12345\"\n}"
+      text: "{\n  \"email\": \"ari@test.com\",\n  \"password\": \"GantiPasswordAnda12\"\n}"
     headers:
     - name: Content-Type
       value: application/json
@@ -345,7 +345,7 @@ collection:
     body:
       mimeType: application/json
       text: "{\n  \"nama\": \"Dr. Sari Wijaya\",\n  \"email\": \"sari@medika.com\"\
-        ,\n  \"password\": \"arie12345\"\n}"
+        ,\n  \"password\": \"GantiPasswordAnda12\"\n}"
     headers:
     - name: Content-Type
       value: application/json
@@ -405,7 +405,7 @@ collection:
     body:
       mimeType: application/json
       text: "{\n  \"nama\": \"Budi Santoso\",\n  \"email\": \"budi@pasien.com\",\n\
-        \  \"password\": \"arie12345\"\n}"
+        \  \"password\": \"GantiPasswordAnda12\"\n}"
     headers:
     - name: Content-Type
       value: application/json

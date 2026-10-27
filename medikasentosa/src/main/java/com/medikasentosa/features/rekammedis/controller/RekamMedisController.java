@@ -3,6 +3,8 @@ package com.medikasentosa.features.rekammedis.controller;
 import com.medikasentosa.features.rekammedis.dto.RekamMedisRequest;
 import com.medikasentosa.features.rekammedis.dto.RekamMedisResponse;
 import com.medikasentosa.features.rekammedis.service.RekamMedisService;
+import com.medikasentosa.shared.audit.AuditLogger;
+import com.medikasentosa.shared.security.AuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -28,9 +30,15 @@ import java.util.List;
 public class RekamMedisController {
 
     private final RekamMedisService rekamMedisService;
+    private final AuthorizationService authorization;
+    private final AuditLogger auditLogger;
 
-    public RekamMedisController(RekamMedisService rekamMedisService) {
+    public RekamMedisController(RekamMedisService rekamMedisService,
+                                AuthorizationService authorization,
+                                AuditLogger auditLogger) {
         this.rekamMedisService = rekamMedisService;
+        this.authorization = authorization;
+        this.auditLogger = auditLogger;
     }
 
     /**
@@ -47,6 +55,8 @@ public class RekamMedisController {
         @ApiResponse(responseCode = "404", description = "Rekam medis tidak ditemukan")
     })
     public RekamMedisResponse getById(@PathVariable Long id) {
+        authorization.requireRekamMedisAccess(id);
+        auditLogger.record("READ", "REKAM_MEDIS", id);
         return rekamMedisService.getById(id);
     }
 
@@ -61,6 +71,8 @@ public class RekamMedisController {
                description = "Mengembalikan seluruh riwayat rekam medis milik pasien tertentu.")
     @ApiResponse(responseCode = "200", description = "Daftar rekam medis berhasil diambil")
     public List<RekamMedisResponse> getByPasien(@PathVariable Long pasienId) {
+        authorization.requireRekamMedisOfPasien(pasienId);
+        auditLogger.record("READ_LIST", "REKAM_MEDIS_PASIEN", pasienId);
         return rekamMedisService.getByPasien(pasienId);
     }
 
@@ -75,6 +87,8 @@ public class RekamMedisController {
                description = "Mengembalikan seluruh rekam medis yang dibuat dokter tertentu.")
     @ApiResponse(responseCode = "200", description = "Daftar rekam medis berhasil diambil")
     public List<RekamMedisResponse> getByDokter(@PathVariable Long dokterId) {
+        authorization.requireDokterSelfOrAdmin(dokterId);
+        auditLogger.record("READ_LIST", "REKAM_MEDIS_DOKTER", dokterId);
         return rekamMedisService.getByDokter(dokterId);
     }
 
@@ -92,6 +106,8 @@ public class RekamMedisController {
         @ApiResponse(responseCode = "404", description = "Rekam medis tidak ditemukan")
     })
     public RekamMedisResponse getByAppointment(@PathVariable Long appointmentId) {
+        authorization.requireAppointmentAccess(appointmentId);
+        auditLogger.record("READ", "REKAM_MEDIS_APPOINTMENT", appointmentId);
         return rekamMedisService.getByAppointment(appointmentId);
     }
 
@@ -113,7 +129,9 @@ public class RekamMedisController {
         @ApiResponse(responseCode = "409", description = "Appointment sudah memiliki rekam medis")
     })
     public ResponseEntity<RekamMedisResponse> create(@Valid @RequestBody RekamMedisRequest request) {
+        authorization.requireAppointmentWrite(request.appointmentId());
         RekamMedisResponse response = rekamMedisService.create(request);
+        auditLogger.record("CREATE", "REKAM_MEDIS", response.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

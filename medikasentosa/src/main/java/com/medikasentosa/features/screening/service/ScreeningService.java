@@ -5,6 +5,7 @@ import com.medikasentosa.features.screening.dto.ScreeningResponse;
 import com.medikasentosa.features.screening.entity.Screening;
 import com.medikasentosa.features.auth.entity.User;
 import com.medikasentosa.shared.exception.ResourceNotFoundException;
+import com.medikasentosa.shared.exception.ServiceUnavailableException;
 import com.medikasentosa.features.screening.repository.ScreeningRepository;
 import com.medikasentosa.features.auth.repository.UserRepository;
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import io.micrometer.core.instrument.Counter;
@@ -47,8 +49,13 @@ public class ScreeningService {
     private final Counter screeningCounter;
     private final Timer screeningLatencyTimer;
 
+    private static final long MAX_UPLOAD_BYTES = 10L * 1024 * 1024;
+
     @Value("${app.fastapi.url}")
     private String fastApiUrl;
+
+    @Value("${app.fastapi.api-key:}")
+    private String internalApiKey;
 
     public ScreeningService(RestTemplate restTemplate,
             ScreeningRepository screeningRepository,
@@ -82,7 +89,20 @@ public class ScreeningService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User tidak ditemukan"));
 
-        // 2. siapkan file sebagai multipart
+        // 2. validasi file sebelum diteruskan ke layanan ML
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File X-ray wajib diunggah");
+        }
+        if (file.getSize() > MAX_UPLOAD_BYTES) {
+            throw new IllegalArgumentException("Ukuran file maksimal 10 MB");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null
+                || !(contentType.equalsIgnoreCase("image/jpeg")
+                || contentType.equalsIgnoreCase("image/png"))) {
+            throw new IllegalArgumentException("Format file harus JPG atau PNG");
+        }
+
         String filename = file.getOriginalFilename() != null
                 ? file.getOriginalFilename()
                 : "xray.jpg";
@@ -103,24 +123,45 @@ public class ScreeningService {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", filePart);
 
-        // header request (multipart)
+        // header request (multipart) + autentikasi antar-service
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        if (internalApiKey != null && !internalApiKey.isBlank()) {
+            headers.set("X-Internal-API-Key", internalApiKey);
+        }
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
 
         // 3. panggil FastAPI (dengan metrik latency)
         long start = System.nanoTime();
-        FastApiResponse prediction = restTemplate.postForObject(
-                fastApiUrl + "/predict/osteoporosis",
-                request,
-                FastApiResponse.class);
-        screeningLatencyTimer.record(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+        FastApiResponse prediction;
+        try {
+            prediction = restTemplate.postForObject(
+                    fastApiUrl + "/predict/osteoporosis",
+                    request,
+                    FastApiResponse.class);
+        } catch (RestClientException e) {
+            log.error("ML service tidak dapat dihubungi: {}", e.getMessage());
+            throw new ServiceUnavailableException(
+                    "Layanan skrining sedang tidak tersedia. Silakan coba lagi nanti.", e);
+        } finally {
+            screeningLatencyTimer.record(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+        }
 
-        // 4. simpan ke DB
+        // 4. validasi respons ML sebelum disimpan (cegah data null/korup di DB)
+        if (prediction == null
+                || prediction.label() == null || prediction.label().isBlank()
+                || prediction.confidence() == null) {
+            log.error("Respons ML tidak valid: {}", prediction);
+            throw new ServiceUnavailableException(
+                    "Layanan skrining mengembalikan hasil yang tidak valid. Silakan coba lagi.");
+        }
+
+        // 5. simpan ke DB
         Screening screening = Screening.builder()
                 .user(user)
                 .label(prediction.label())
                 .confidence(prediction.confidence())
+                .probabilities(prediction.probabilities())
                 .risk(prediction.risk())
                 .gradcamImage(prediction.gradcamImage())
                 .latencyMs(prediction.latencyMs() != null
@@ -156,6 +197,7 @@ public class ScreeningService {
                 s.getId(),
                 s.getLabel(),
                 s.getConfidence(),
+                s.getProbabilities(),
                 s.getRisk(),
                 s.getGradcamImage(),
                 s.getLatencyMs(),

@@ -41,7 +41,7 @@ public class PoliService {
      * @return data poli yang berhasil dibuat
      * @throws DuplicateResourceException bila poli dengan nama tersebut sudah ada
      */
-    @CacheEvict(value = "poli-all", allEntries = true) // invalidasi cache daftar poli
+    @CacheEvict(value = {"poli-all", "poli-active"}, allEntries = true) // invalidasi cache daftar poli
     public PoliResponse create(PoliRequest request) {
         log.info("Creating poli: {}", request.nama());
         if (poliRepository.existsByNamaIgnoreCase(request.nama())) {
@@ -75,6 +75,28 @@ public class PoliService {
     }
 
     /**
+     * Mengambil daftar poli aktif untuk konsumen publik (form booking).
+     * Poli yang dinonaktifkan tidak boleh muncul di pilihan pasien.
+     *
+     * @return daftar poli aktif
+     */
+    @Cacheable(value = "poli-active")
+    public List<PoliResponse> getAllActive() {
+        return poliRepository.findByIsActiveTrue()
+                .stream().map(this::toResponse).toList();
+    }
+
+    /**
+     * Versi paginated dari daftar poli aktif.
+     *
+     * @param pageable parameter pagination
+     * @return halaman poli aktif
+     */
+    public Page<PoliResponse> getAllActive(Pageable pageable) {
+        return poliRepository.findByIsActiveTrue(pageable).map(this::toResponse);
+    }
+
+    /**
      * Mengambil satu poli berdasarkan ID.
      *
      * @param id ID poli yang dicari
@@ -94,7 +116,7 @@ public class PoliService {
      * @return data poli setelah diperbarui
      * @throws ResourceNotFoundException bila poli tidak ditemukan
      */
-    @CacheEvict(value = {"poli-all", "poli-by-id"}, allEntries = true) // invalidasi semua cache poli
+    @CacheEvict(value = {"poli-all", "poli-active", "poli-by-id"}, allEntries = true) // invalidasi semua cache poli
     public PoliResponse update(Long id, PoliRequest request) {
         log.info("Updating poli id={}", id);
         Poli poli = findOrThrow(id);
@@ -110,7 +132,7 @@ public class PoliService {
      * @param id ID poli yang akan dinonaktifkan
      * @throws ResourceNotFoundException bila poli tidak ditemukan
      */
-    @CacheEvict(value = {"poli-all", "poli-by-id"}, allEntries = true) // invalidasi cache
+    @CacheEvict(value = {"poli-all", "poli-active", "poli-by-id"}, allEntries = true) // invalidasi cache
     public void deactivate(Long id) {
         log.info("Deactivating poli id={}", id);
         Poli poli = findOrThrow(id);
