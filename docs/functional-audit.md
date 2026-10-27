@@ -413,4 +413,4 @@ booking → antrian → panel dokter → pemeriksaan → rekam medis/resep/lab/r
 4. Terapkan residual risk keamanan dari `docs/security-audit.md` (TLS, enkripsi at-rest, verifikasi pembayaran, rate limit terdistribusi).
 5. Ganti tarif default billing dengan master tarif bila rumah sakit membutuhkan tarif per poli/layanan yang berbeda.
 
-**Status perubahan:** seluruh perbaikan audit fungsional ini belum di-commit, sesuai permintaan.
+**Status perubahan:** seluruh perbaikan audit fungsional sudah di-commit ke branch `main`.
