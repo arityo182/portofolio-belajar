@@ -40,26 +40,26 @@ ALTER SEQUENCE pembayaran_id_seq RESTART WITH 1;
 -- Password: unik per user, dibuat saat seeding (lihat CREDENTIALS.md lokal; tidak di-commit)
 -- ================================================
 INSERT INTO users (id, nama, email, password, role, is_active, created_at) VALUES
-(1,  'Admin Medika',       'admin@medikasentosa.id',    '$2b$12$tqB5Z48rJw2I53D5pW55x.TNnvZOvMYswq3FscF46QtzvAu.KrPW.', 'ADMIN',  true, '2026-01-01 08:00:00'),
-(2,  'dr. Ahmad Fauzi',    'ahmad.fauzi@medika.id',     '$2b$12$m8isuFnw3nM/gF1xCiZFpulBiEYOCrYeryTcO2MGnPO65LeEFcxXy', 'DOKTER', true, '2026-01-01 08:00:00'),
-(3,  'dr. Sari Wijaya',    'sari.wijaya@medika.id',     '$2b$12$yEPwRwN7DQ4QnJSI4WtSW.agJq2g2B//iN30GwOA/.iFZ8o7IBIf.', 'DOKTER', true, '2026-02-01 08:00:00'),
-(4,  'dr. Budi Hartono',   'budi.hartono@medika.id',    '$2b$12$cQvrygOEaWVIlCgGPK0jzeBKQ0KYMyj.0UbZxFidxA.WYrr.2gDt6', 'DOKTER', true, '2026-02-15 08:00:00'),
-(5,  'dr. Dewi Lestari',   'dewi.lestari@medika.id',    '$2b$12$9utmXhC0NNE.Zygw7KWJru2hMAL2HC2JYULk.ImZGK6K1p/aIMNfi', 'DOKTER', true, '2026-03-01 08:00:00'),
-(6,  'dr. Rudi Hermawan',  'rudi.hermawan@medika.id',   '$2b$12$.21CT3AuF6hU7sw8HRFj8O2wY/bWoY7zDlNL2CqRoBddM/5BZDxo2', 'DOKTER', true, '2026-03-15 08:00:00'),
-(7,  'dr. Maya Putri',     'maya.putri@medika.id',      '$2b$12$4TnLu.STB9VDq6ZkWit14.FbqO.K8CzdERuIaodqALuvtAapSI0kG', 'DOKTER', true, '2026-04-01 08:00:00'),
-(8,  'dr. Hendra Gunawan', 'hendra.gunawan@medika.id',  '$2b$12$0HPBmzhTgg4XFg8sLRxXzON0TtGwRk5rQ4ikwhecDeAUOjvPPmozC', 'DOKTER', true, '2026-04-15 08:00:00'),
-(9,  'Budi Santoso',       'budi.santoso@gmail.com',    '$2b$12$OKGgx.SlCcixbzlIq8uql..0Ivo/Jw/iAlC3MzkYHthEhdt2Ce//q', 'PASIEN', true, '2026-05-01 08:00:00'),
-(10, 'Ani Rahmawati',      'ani.rahmawati@gmail.com',   '$2b$12$2KXlRybAnTUhiH8QPqC8fexUp/0ajvaCxTZ0PmOjneFtxr6MeBuFe', 'PASIEN', true, '2026-05-02 08:00:00'),
-(11, 'Herman Salim',       'herman.salim@gmail.com',    '$2b$12$o98tJiQJbM/NzpWqgvXXMOosZLWo5ZDgE9Uu1KxoYzFW1BN9mWG7K', 'PASIEN', true, '2026-05-03 08:00:00'),
-(12, 'Siti Nurhaliza',     'siti.nurhaliza@gmail.com',  '$2b$12$SQz8FZXOUq4iBgIqBmA7qulCO8oQQtueX9QvVr/z949cPuEGUMYgm', 'PASIEN', true, '2026-05-04 08:00:00'),
-(13, 'Rizal Pratama',      'rizal.pratama@gmail.com',   '$2b$12$4lCXV4UXtkrmGDqJPFty3uJShXksaokxqyVKbMqGLmScAHR2cjdxy', 'PASIEN', true, '2026-05-05 08:00:00'),
-(14, 'Linda Kusuma',       'linda.kusuma@gmail.com',    '$2b$12$TxEbM4BF3zwQ0P0T4MvaQeRoEPZM3vkxnlJuFZmPjLNbR5LbJTcUq', 'PASIEN', true, '2026-05-06 08:00:00'),
-(15, 'Agus Supriyadi',     'agus.supriyadi@gmail.com',  '$2b$12$GNshuFRWTUYy8j4CorviqOh0gFGd25VbHpOLgHEpr5MHBDfL8rg2u', 'PASIEN', true, '2026-05-07 08:00:00'),
-(16, 'Tiara Anggraini',    'tiara.anggraini@gmail.com', '$2b$12$cDZouqz2zwIX.GLPxiGy/uwqGR4aVIE.C7iP8v4.n9jaJd4DxYXeS', 'PASIEN', true, '2026-05-08 08:00:00'),
-(17, 'Dedi Irawan',        'dedi.irawan@gmail.com',     '$2b$12$Kfizn4LBW6Nd27.BPIqZyuQ7ogMS/eLW9oePEFz61w5cRl7kEYl5y', 'PASIEN', true, '2026-05-09 08:00:00'),
-(18, 'Rina Marlina',       'rina.marlina@gmail.com',    '$2b$12$yzAXFUKVw7mCUY0AutSb3.KbFLsOzjw7e6LQ3b.zgAthjjJUZIwIq', 'PASIEN', true, '2026-05-10 08:00:00'),
-(19, 'Fajar Nugroho',      'fajar.nugroho@gmail.com',   '$2b$12$HMDLq9e21wSv7g6f.6FVXeifz3AGEsTafjBrMmlNls6P5IzNE6bOC', 'PASIEN', true, '2026-05-11 08:00:00'),
-(20, 'Nurul Hidayah',      'nurul.hidayah@gmail.com',   '$2b$12$Ic095MGyxW65KufsUS2nYuW7.kd/waXy8NK9HR9nzZKUWHT4nEY..', 'PASIEN', true, '2026-05-12 08:00:00');
+(1,  'Admin Medika',       'admin@medikasentosa.id',    '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'ADMIN',  true, '2026-01-01 08:00:00'),
+(2,  'dr. Ahmad Fauzi',    'ahmad.fauzi@medika.id',     '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'DOKTER', true, '2026-01-01 08:00:00'),
+(3,  'dr. Sari Wijaya',    'sari.wijaya@medika.id',     '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'DOKTER', true, '2026-02-01 08:00:00'),
+(4,  'dr. Budi Hartono',   'budi.hartono@medika.id',    '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'DOKTER', true, '2026-02-15 08:00:00'),
+(5,  'dr. Dewi Lestari',   'dewi.lestari@medika.id',    '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'DOKTER', true, '2026-03-01 08:00:00'),
+(6,  'dr. Rudi Hermawan',  'rudi.hermawan@medika.id',   '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'DOKTER', true, '2026-03-15 08:00:00'),
+(7,  'dr. Maya Putri',     'maya.putri@medika.id',      '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'DOKTER', true, '2026-04-01 08:00:00'),
+(8,  'dr. Hendra Gunawan', 'hendra.gunawan@medika.id',  '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'DOKTER', true, '2026-04-15 08:00:00'),
+(9,  'Budi Santoso',       'budi.santoso@gmail.com',    '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'PASIEN', true, '2026-05-01 08:00:00'),
+(10, 'Ani Rahmawati',      'ani.rahmawati@gmail.com',   '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'PASIEN', true, '2026-05-02 08:00:00'),
+(11, 'Herman Salim',       'herman.salim@gmail.com',    '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'PASIEN', true, '2026-05-03 08:00:00'),
+(12, 'Siti Nurhaliza',     'siti.nurhaliza@gmail.com',  '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'PASIEN', true, '2026-05-04 08:00:00'),
+(13, 'Rizal Pratama',      'rizal.pratama@gmail.com',   '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'PASIEN', true, '2026-05-05 08:00:00'),
+(14, 'Linda Kusuma',       'linda.kusuma@gmail.com',    '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'PASIEN', true, '2026-05-06 08:00:00'),
+(15, 'Agus Supriyadi',     'agus.supriyadi@gmail.com',  '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'PASIEN', true, '2026-05-07 08:00:00'),
+(16, 'Tiara Anggraini',    'tiara.anggraini@gmail.com', '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'PASIEN', true, '2026-05-08 08:00:00'),
+(17, 'Dedi Irawan',        'dedi.irawan@gmail.com',     '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'PASIEN', true, '2026-05-09 08:00:00'),
+(18, 'Rina Marlina',       'rina.marlina@gmail.com',    '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'PASIEN', true, '2026-05-10 08:00:00'),
+(19, 'Fajar Nugroho',      'fajar.nugroho@gmail.com',   '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'PASIEN', true, '2026-05-11 08:00:00'),
+(20, 'Nurul Hidayah',      'nurul.hidayah@gmail.com',   '$2a$10$LMCGtYAC.EeCBdgprD4ITO3G7kQblFebA7iTesc93/7/oBB2eL9Ty', 'PASIEN', true, '2026-05-12 08:00:00');
 
 -- ================================================
 -- 2. POLI (5 poli)
