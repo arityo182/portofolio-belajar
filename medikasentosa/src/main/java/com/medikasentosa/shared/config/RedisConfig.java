@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
@@ -19,7 +19,7 @@ import java.util.Map;
  * Konfigurasi Redis caching.
  *
  * <p>Mengaktifkan Spring Cache dengan Redis sebagai backend. Data disimpan
- * dalam format JSON (GenericJackson2JsonRedisSerializer) agar readable
+ * dalam format JSON (RedisSerializer.json()) agar readable
  * saat debugging via redis-cli.</p>
  *
  * <p><b>Fallback:</b> Jika Redis tidak tersedia, set
@@ -38,17 +38,18 @@ public class RedisConfig {
     private static final Duration DEFAULT_TTL = Duration.ofHours(1);
 
     /**
-     * CacheManager dengan serializer JSON.
-     * Key disimpan sebagai String, value sebagai JSON.
+     * CacheManager dengan serializer JSON modern yang mendukung Java 8 Date/Time (JSR-310).
      */
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        RedisSerializer<Object> jsonSerializer = RedisSerializer.json();
+
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(DEFAULT_TTL)
                 .serializeKeysWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                        .fromSerializer(jsonSerializer))
                 .disableCachingNullValues();
 
         // TTL spesifik per cache (semua 1 jam untuk master data)
