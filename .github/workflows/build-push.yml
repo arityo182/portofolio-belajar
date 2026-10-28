@@ -49,7 +49,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
-          file: ${{ matrix.dockerfile }}   ← tambahkan baris ini
+          file: ${{ matrix.dockerfile }}
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ steps.tag.outputs.tag }}
