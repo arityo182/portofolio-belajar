@@ -56,6 +56,9 @@ services:
       - "${REDIS_PASSWORD:?REDIS_PASSWORD wajib diisi}"
       - "--appendonly"
       - "yes"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     security_opt:
