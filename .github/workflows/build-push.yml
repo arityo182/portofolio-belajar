@@ -91,13 +91,17 @@ jobs:
             docker compose -f docker-compose.staging.yml pull
             docker compose -f docker-compose.staging.yml up -d
             docker image prune -f
-            echo "✅ Staging deployed!"
+            echo "Menunggu aplikasi Spring Boot siap..."
+            sleep 25
+            curl -f http://127.0.0.1:8090/actuator/health || exit 1
+            echo "✅ Staging deployed & health check passed!"
 
-      - name: Smoke Test Staging
-        run: |
-          sleep 20
-          curl -f http://${{ secrets.EC2_HOST }}:8090/actuator/health || exit 1
-          echo "✅ Staging health check passed!"
+      # Smoke test lama di GitHub Runner di-comment (karena port 8090 hanya listen di 127.0.0.1 VPS, tidak bisa diakses dari internet luar)
+      # - name: Smoke Test Staging
+      #   run: |
+      #     sleep 20
+      #     curl -f http://${{ secrets.EC2_HOST }}:8090/actuator/health || exit 1
+      #     echo "✅ Staging health check passed!"
 
   # ─── 3. DEPLOY OTOMATIS KE PRODUCTION (KHUSUS MAIN) ─────
   deploy-production:
@@ -132,13 +136,17 @@ jobs:
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
             docker image prune -f
-            echo "✅ Production deployed!"
+            echo "Menunggu aplikasi Spring Boot siap..."
+            sleep 25
+            curl -f http://127.0.0.1:8080/actuator/health || exit 1
+            echo "✅ Production deployed & health check passed!"
 
-      - name: Smoke Test Production
-        run: |
-          sleep 20
-          curl -f http://${{ secrets.EC2_HOST }}:8080/actuator/health || exit 1
-          echo "✅ Production health check passed!"
+      # Smoke test lama di GitHub Runner di-comment (karena port 8080 hanya listen di 127.0.0.1 VPS, tidak bisa diakses dari internet luar)
+      # - name: Smoke Test Production
+      #   run: |
+      #     sleep 20
+      #     curl -f http://${{ secrets.EC2_HOST }}:8080/actuator/health || exit 1
+      #     echo "✅ Production health check passed!"
 
 # ==============================================================================
 # KONFIGURASI LAMA (ARSIP / BACKUP DI-COMMENT):
