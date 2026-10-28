@@ -49,16 +49,16 @@ jobs:
       - run: npm run build
         working-directory: hospital-frontendjs
 
-  ml-service-check:
-    name: ML Service Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install & Check
-        working-directory: ml-service
-        run: |
-          pip install fastapi uvicorn pydantic numpy pillow
-          python -c "from app.main import app; print('✅ OK')"
+  # ml-service-check:               # skip — butuh GPU terpisah
+  #   name: ML Service Check
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: '3.11'
+  #     - name: Install & Check
+  #       working-directory: ml-service
+  #       run: |
+  #         pip install fastapi uvicorn pydantic numpy pillow
+  #         python -c "from app.main import app; print('✅ OK')"

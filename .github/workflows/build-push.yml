@@ -15,15 +15,17 @@ jobs:
           - name: backend
             context: medikasentosa
             image: medika-backend
+            dockerfile: medikasentosa/Dockerfile.prod
           - name: frontend
             context: hospital-frontendjs
             image: medika-frontend
-          - name: ml-service
-            context: ml-service
-            image: medika-ml
-          - name: chatbot
-            context: chatbot-service
-            image: medika-chatbot
+            dockerfile: hospital-frontendjs/Dockerfile.prod
+          # - name: ml-service       # skip — butuh GPU terpisah
+          #   context: ml-service
+          #   image: medika-ml
+          # - name: chatbot          # skip — butuh GPU terpisah
+          #   context: chatbot-service
+          #   image: medika-chatbot
 
     steps:
       - uses: actions/checkout@v4
@@ -47,6 +49,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}   ← tambahkan baris ini
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ steps.tag.outputs.tag }}
