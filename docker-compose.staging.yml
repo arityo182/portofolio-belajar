@@ -66,7 +66,7 @@ services:
 
   # ─── Backend Spring Boot ─────────────────────
   backend:
-    image: arityo182/medika-backend:staging
+    image: ${DOCKERHUB_USERNAME:-arityo182}/medika-backend:${IMAGE_TAG:-staging}
     pull_policy: always
     container_name: medika-staging-backend
     restart: unless-stopped
@@ -178,7 +178,7 @@ services:
 
   # ─── Frontend (Nginx) ─────────────────────────
   frontend:
-    image: arityo182/medika-frontend:staging
+    image: ${DOCKERHUB_USERNAME:-arityo182}/medika-frontend:${IMAGE_TAG:-staging}
     pull_policy: always
     container_name: medika-staging-frontend
     restart: unless-stopped

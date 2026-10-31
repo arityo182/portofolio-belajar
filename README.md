@@ -530,21 +530,31 @@ docker compose build --no-cache   # Build ulang dari awal
 
 [![CI](https://github.com/arityo182/portofolio-belajar/actions/workflows/ci.yml/badge.svg)](https://github.com/arityo182/portofolio-belajar/actions/workflows/ci.yml)
 
-Pipeline otomatis jalan setiap **push** ke `main`/`develop` dan **pull request**.
+Alur deploy:
 
-### Jobs
+```text
+PR ke develop/main        → CI saja (test, lint, build, compose check)
+merge/push ke develop     → CI → build image → deploy staging
+merge/push ke main        → CI → build image → deploy production
+```
 
-| Job | Apa yang dicek |
-|-----|---------------|
-| **backend-test** | `./gradlew test` — 119 unit tests (Java 21, PostgreSQL) |
-| **ml-service-check** | Python imports, dependencies OK (model tidak di-load) |
-| **frontend-check** | `npm test` + `npm run build` |
-| **docker-build** | Build semua Docker image (setelah 3 job sukses) |
+| Workflow | Trigger | Isi |
+|---|---|---|
+| `ci.yml` | PR + dipanggil `deploy.yml` | Backend test, frontend lint/test/build, Python compile, compose config |
+| `deploy.yml` | Push ke `develop`/`main` | Build & push image, deploy staging/production |
+
+Catatan:
+
+- Deploy hanya berjalan jika seluruh job CI lulus.
+- Image deploy memakai tag `sha-<commit>`, bukan `latest`.
+- `ml-service` dan `chatbot` **belum di-deploy**; block-nya tetap dikomentari di compose.
+- Detail secret, branch protection, dan rollback ada di `docs/7-cicd-github-actions.md`.
 
 ### Cara trigger
 
 ```bash
-git push origin main
+git push origin develop   # deploy staging
+git push origin main      # deploy production
 ```
 
 Cek hasil di tab **Actions** di GitHub → klik workflow → klik job yang fail untuk lihat log.

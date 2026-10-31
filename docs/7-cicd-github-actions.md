@@ -1,305 +1,178 @@
-# 🔄 Cara CI/CD (GitHub Actions)
+# 🔄 CI/CD — GitHub Actions
 
-> Otomasi build, test, dan deploy setiap kali push ke GitHub.
+> Alur: PR → test → merge ke `develop` → staging. Merge ke `main` → production.
 
 ---
 
-## Overview
+## Alur branch
 
-```
-git push → GitHub Actions → [Test] → [Build] → [Deploy (opsional)]
-                                  │
-                                  ├── Backend: Java 21 + Gradle + PostgreSQL
-                                  ├── Frontend: Node 20 + JavaScript + Vite
-                                  ├── ML Service: Python 3.11 import check
-                                  └── Docker: Build semua images
+```text
+feature/* --PR--> develop --merge--> CI lulus --> build image --> deploy STAGING
+develop   --PR--> main    --merge--> CI lulus --> build image --> deploy PRODUCTION
 ```
 
----
-
-## Workflow yang Aktif
-
-### `ci.yml` — Build & Test
-
-**Trigger:** Push ke `main`/`develop`, PR ke `main`
-
-| Job | Apa yang dilakukan | Runtime |
-|---|---|---|
-| `backend-test` | Build Java + run JUnit tests dengan PostgreSQL container | ubuntu-latest |
-| `ml-service-check` | Install Python deps + verify imports | ubuntu-latest |
-| `frontend-check` | JavaScript test + Vite build | ubuntu-latest |
-| `docker-build` | Build semua Docker images (depends on 3 jobs di atas) | ubuntu-latest |
+- **PR** hanya menjalankan test. Tidak ada build/deploy dari PR.
+- **Push/merge ke `develop`** menjalankan test, build image `staging` + `sha-<commit>`, lalu deploy staging.
+- **Push/merge ke `main`** menjalankan test, build image `latest` + `sha-<commit>`, lalu deploy production.
+- `main` dan `develop` sebaiknya dilindungi: wajib PR + status check CI hijau.
 
 ---
 
-## Setup GitHub Secrets
+## Workflow
 
-Buka repo → **Settings** → **Secrets and variables** → **Actions**
+### `ci.yml` — test & validasi
 
-### Wajib (untuk test)
+Trigger:
 
-| Secret | Value | Keterangan |
-|---|---|---|
-| `POSTGRES_PASSWORD` | _(secret GitHub, nilai acak)_ | Password PostgreSQL di CI |
+- `pull_request` ke `develop` dan `main`
+- `workflow_call` (dipanggil oleh `deploy.yml`)
 
-### Untuk Deploy (opsional)
+Job:
 
-| Secret | Value |
+| Job | Isi |
 |---|---|
-| `EC2_HOST` | Public IP EC2 instance |
-| `EC2_SSH_KEY` | Isi file `.pem` (private key) |
-| `AWS_ACCESS_KEY_ID` | Dari IAM user |
-| `AWS_SECRET_ACCESS_KEY` | Dari IAM user |
-| `AWS_REGION` | `ap-southeast-1` |
+| `backend-test` | `./gradlew test` (H2, tanpa PostgreSQL service) |
+| `frontend-check` | `npm ci`, `npm run lint`, `npm test`, `npm run build` |
+| `python-check` | `python -m compileall ml-service/app chatbot-service/app` |
+| `compose-check` | `docker compose ... config -q` untuk compose utama, staging, production |
+
+### `deploy.yml` — build & deploy
+
+Trigger: `push` ke `develop` atau `main`, kecuali perubahan dokumentasi saja.
+
+Urutan job:
+
+```text
+ci (reusable) → build-push → deploy-staging  (jika develop)
+                           └→ deploy-production (jika main)
+```
+
+Fitur:
+
+- Deploy **tidak akan jalan** kalau salah satu job CI gagal.
+- Image ditandai dengan **`sha-<commit>`** agar versi yang di-deploy pasti.
+- Compose staging/production memakai `DOCKERHUB_USERNAME` dan `IMAGE_TAG`.
+- Deploy memakai `docker compose up -d --wait`, lalu health check dengan retry.
+- `concurrency` mencegah dua deploy di environment yang sama saling menimpa.
 
 ---
 
-## Cara Kerja
+## ML service & chatbot
 
-### 1. Push ke GitHub
+Saat ini **tidak di-deploy**:
 
-```bash
-git add .
-git commit -m "feat: tambah fitur baru"
-git push origin main
-```
+- Block `ml-service` dan `chatbot` di `deploy/docker-compose.staging.yml` dan `deploy/docker-compose.prod.yml` tetap dikomentari.
+- Matrix build hanya berisi `backend` dan `frontend`.
+- CI hanya menjalankan compile-check Python, bukan build/deploy image.
 
-### 2. GitHub Actions Trigger
+Untuk mengaktifkan kembali nanti:
 
-Buka https://github.com/arityo182/portofolio-belajar/actions
-
-Akan ada workflow baru yang running.
-
-### 3. Tunggu Selesai
-
-Klik workflow → klik job → lihat logs real-time.
-
-**Expected result:**
-```
-✅ Backend — Java 21 Tests     (PASS)
-✅ ML Service — Import Check   (PASS)
-✅ Frontend — JavaScript + Build (PASS)
-✅ Docker — Build Images        (PASS)
-```
-
-### 4. Deploy (opsional)
-
-Jika `deploy-aws.yml` sudah di-uncomment, deploy otomatis jalan setelah CI pass.
+1. Uncomment service di compose staging/production.
+2. Tambahkan lagi matrix `ml-service` dan `chatbot` di `.github/workflows/deploy.yml`.
+3. Isi secret `ML_INTERNAL_API_KEY`, `CHATBOT_INTERNAL_API_KEY`, dan `VLLM_API_KEY`.
+4. Pastikan GPU/vLLM tersedia.
 
 ---
 
-## Detail Setiap Job
+## Secrets
 
-### Backend Test
+### Repository secrets
 
-```yaml
-services:
-  postgres:  # PostgreSQL 16 container
-    image: postgres:16-alpine
-    env:
-      POSTGRES_DB: medika_sentosa
-      POSTGRES_USER: core
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+| Secret | Dipakai untuk |
+|---|---|
+| `DOCKERHUB_USERNAME` | Nama akun DockerHub dan prefix image |
+| `DOCKERHUB_TOKEN` | Login DockerHub saat build & push |
+| `EC2_HOST` | Host VPS deploy |
+| `EC2_USER` | User SSH VPS |
+| `EC2_SSH_KEY` | Private key SSH |
 
-steps:
-  - Setup JDK 21
-  - Setup Gradle (dengan caching)
-  - ./gradlew test
-  - Upload test results sebagai artifact
+### GitHub Environment
+
+Gunakan environment `staging` dan `production`:
+
+- `staging` boleh auto-deploy.
+- `production` sebaiknya memakai **required reviewer** agar merge ke `main` tidak langsung men-deploy tanpa persetujuan.
+- Jika staging dan production berada di server berbeda, simpan `EC2_*` sebagai **environment secret**, bukan repository secret.
+
+### File `.env` di server
+
+Compose membaca `.env` dari direktori deploy:
+
+- `~/medika-staging/.env`
+- `~/medika/.env`
+
+Isi minimal:
+
+```dotenv
+POSTGRES_DB=medika_sentosa
+POSTGRES_USER=core
+POSTGRES_PASSWORD=<password-kuat>
+REDIS_PASSWORD=<password-kuat>
+JWT_SECRET=<minimal-32-byte-acak>
+ADMIN_PASSWORD=<password-admin-awal>
+GRAFANA_PASSWORD=<password-grafana>
 ```
 
-**Yang di-test:**
-- 22 unit test files (service layer)
-- Semua feature modules: auth, appointment, billing, chat, dll
-- Build success = semua test pass
+Catatan:
 
-### Frontend Check
-
-```yaml
-steps:
-  - Setup Node.js 20 (dengan npm cache)
-  - npm ci
-  - npm test                # Vitest unit tests
-  - npm run build           # Vite production build
-  - Upload dist/ sebagai artifact
-```
-
-**Yang di-check:**
-- Unit test frontend (JavaScript) lolos
-- Build success = semua komponen compile
-
-### ML Service Check
-
-```yaml
-steps:
-  - Setup Python 3.11
-  - pip install dependencies
-  - python -c "from app.main import app"  # Import check
-  - Check model file existence
-```
-
-**Yang di-check:**
-- Semua import berhasil
-- Model file `.keras` (skip jika tidak ada — too large for Git)
-
-### Docker Build
-
-```yaml
-needs: [backend-test, ml-service-check, frontend-check]
-
-steps:
-  - Build backend image (multi-stage)
-  - Build frontend deps image (medika-frontend-deps)
-  - Build frontend image (multi-stage + Nginx)
-  - Verify images exist
-```
-
-**Hanya jalan jika 3 job di atas PASS.**
+- `.env` **tidak boleh** di-commit.
+- `DOCKERHUB_TOKEN` tidak perlu ada di `.env` server; token hanya dipakai GitHub Actions.
+- `POSTGRES_PASSWORD` tidak lagi diperlukan untuk CI karena backend test memakai H2.
 
 ---
 
-## Artifacts
+## Image tag
 
-Setiap job meng-upload artifacts yang bisa didownload:
-
-| Artifact | Isi | Retention |
+| Branch | Tag channel | Tag immutable |
 |---|---|---|
-| `backend-test-results` | HTML test report | 7 hari |
-| `frontend-dist` | Built frontend files | 7 hari |
+| `develop` | `staging` | `sha-<commit>` |
+| `main` | `latest` | `sha-<commit>` |
 
-Download: Klik workflow → klik job → scroll ke **Artifacts** section.
-
----
-
-## Caching
-
-GitHub Actions otomatis cache:
-
-| What | Cache Key | Location |
-|---|---|---|
-| Gradle dependencies | `gradle-*` | `~/.gradle/caches` |
-| npm packages | `npm-*` | `node_modules` |
-| Docker layers | `type=gha` | GitHub Actions cache |
-
-**Impact:** Build kedua ~50% lebih cepat.
+Deploy selalu memakai `sha-<commit>`, bukan `latest`, supaya build lama tidak menimpa build baru.
 
 ---
 
-## Workflow Deploy (AWS EC2)
+## Deploy manual / rollback
 
-### `deploy-aws.yml` — Deploy to EC2
+Deploy normal terjadi lewat merge. Untuk rollback:
 
-**Status:** COMMENTED (uncomment saat deploy)
+1. Cari commit terakhir yang sehat.
+2. Checkout commit tersebut di branch yang sesuai, atau jalankan ulang workflow pada commit itu.
+3. Pastikan image `sha-<commit>` masih ada di DockerHub.
 
-**Trigger:** Push ke `main` + CI passed
-
-```yaml
-steps:
-  1. SSH ke EC2
-  2. cd /opt/medika
-  3. git pull origin main
-  4. docker compose down
-  5. docker compose build --no-cache
-  6. docker compose up -d
-  7. docker compose exec backend ./gradlew test
-  8. Health check: curl http://localhost:8080/api/health
-```
-
-### Cara Aktifkan
-
-1. Buka `.github/workflows/deploy-aws.yml`
-2. Hapus semua `# ` di awal baris (uncomment)
-3. Set GitHub secrets: `EC2_HOST`, `EC2_SSH_KEY`
-4. Push ke `main`
-
----
-
-## Menambah Job Baru
-
-Contoh: tambah job untuk lint Python:
-
-```yaml
-  python-lint:
-    name: Python — Lint Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install ruff
-      - run: ruff check ml-service/ chatbot-service/
-```
+Rollback database belum otomatis. Lakukan backup sebelum migrasi schema production.
 
 ---
 
 ## Troubleshooting
 
-### Workflow tidak trigger
+### Deploy staging gagal di health check
+
 ```bash
-# Cek branch name — harus main atau develop
-git branch
-
-# Cek .github/workflows/ ada file .yml
-ls .github/workflows/
+ssh user@VPS
+cd ~/medika-staging
+docker compose -f docker-compose.staging.yml ps
+docker compose -f docker-compose.staging.yml logs --tail=100 backend
 ```
 
-### Backend test gagal
-```bash
-# Cek logs di GitHub Actions
-# Biasanya: PostgreSQL connection refused
-# Pastikan service container jalan
+### Image tidak ditemukan
+
+Pastikan `DOCKERHUB_USERNAME` di secret sama dengan prefix image di compose, dan image `sha-<commit>` berhasil di-push.
+
+### `.env` belum ada
+
+Workflow akan berhenti dengan pesan:
+
+```text
+ERROR: ~/medika-staging/.env belum ada
 ```
 
-### Frontend build gagal
-```bash
-# Cek error frontend locally
-cd hospital-frontendjs
-npm test
-npm run build
-```
+Buat file tersebut di server sebelum deploy pertama.
 
-### Docker build timeout
-```bash
-# GitHub Actions punya timeout 60 menit
-# Jika terlalu lama, cek:
-# - .dockerignore sudah benar
-# - Tidak ada COPY yang tidak perlu
-```
+### Production gagal start
 
-### Deploy gagal
-```bash
-# Cek GitHub Secrets sudah benar
-# Cek EC2 security group terbuka
-# Cek SSH key valid
-ssh -i key.pem ubuntu@EC2_IP
-```
+Periksa:
 
----
-
-## Monitoring
-
-### Badge di README
-
-Tambahkan badge ke `README.md`:
-
-```markdown
-![CI](https://github.com/arityo182/portofolio-belajar/actions/workflows/ci.yml/badge.svg)
-```
-
-### Notifikasi
-
-- **Email:** Otomatis jika workflow fail (diaktifkan di GitHub Settings)
-- **Slack:** Bisa integrasi via Slack GitHub Action
-- **Status Badge:** Tampilkan di README atau website
-
----
-
-## Best Practices
-
-1. **Jangan commit langsung ke main** — pakai PR + branch protection
-2. **Test locally dulu** — sebelum push
-3. **Gunakan secrets** — jangan hardcode passwords
-4. **Cache dependencies** — sudah otomatis diaktifkan
-5. **Upload artifacts** — untuk debugging jika build gagal
-6. **Branch protection** — require PR review + CI pass sebelum merge
+- `SPRING_PROFILES_ACTIVE=production`
+- `JWT_SECRET`, `POSTGRES_*`, `REDIS_PASSWORD`
+- schema database sudah sesuai (`ddl-auto=validate`)

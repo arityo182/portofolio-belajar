@@ -1,64 +1,108 @@
 name: CI
 
 on:
-  push:
-    branches: ['**']
   pull_request:
-    branches: [main, develop]
+    branches: [develop, main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
 
 jobs:
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: medika_sentosa
-          POSTGRES_USER: core
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-        ports: ["5432:5432"]
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: temurin
-      - uses: gradle/actions/setup-gradle@v4
-      - name: Test
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run backend tests
         working-directory: medikasentosa
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/medika_sentosa
-          SPRING_DATASOURCE_USERNAME: core
-          SPRING_DATASOURCE_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: ./gradlew test --no-daemon
 
+      - name: Upload backend test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: medikasentosa/build/reports/tests/test/
+          retention-days: 7
+
   frontend-check:
-    name: Frontend Build
+    name: Frontend Lint, Test & Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: hospital-frontendjs/package-lock.json
-      - run: npm ci
-        working-directory: hospital-frontendjs
-      - run: npm run build
-        working-directory: hospital-frontendjs
 
-  # ml-service-check:               # skip — butuh GPU terpisah
-  #   name: ML Service Check
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: '3.11'
-  #     - name: Install & Check
-  #       working-directory: ml-service
-  #       run: |
-  #         pip install fastapi uvicorn pydantic numpy pillow
-  #         python -c "from app.main import app; print('✅ OK')"
+      - name: Install dependencies
+        working-directory: hospital-frontendjs
+        run: npm ci
+
+      - name: Lint
+        working-directory: hospital-frontendjs
+        run: npm run lint
+
+      - name: Test
+        working-directory: hospital-frontendjs
+        run: npm test
+
+      - name: Build
+        working-directory: hospital-frontendjs
+        run: npm run build
+
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: hospital-frontendjs/dist/
+          retention-days: 7
+
+  python-check:
+    name: Python Compile Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile ML & chatbot sources
+        run: python -m compileall -q ml-service/app chatbot-service/app
+
+  compose-check:
+    name: Compose Config Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate compose files
+        run: |
+          docker compose --env-file .env.example -f docker-compose.yml config -q
+          docker compose --env-file .env.example -f deploy/docker-compose.staging.yml config -q
+          docker compose --env-file .env.example -f deploy/docker-compose.prod.yml config -q

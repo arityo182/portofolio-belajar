@@ -71,7 +71,7 @@ services:
 
   # ─── Backend Spring Boot ─────────────────────
   backend:
-    image: arityo182/medika-backend:latest
+    image: ${DOCKERHUB_USERNAME:-arityo182}/medika-backend:${IMAGE_TAG:-latest}
     pull_policy: always
     container_name: medika-backend
     restart: unless-stopped
@@ -101,8 +101,9 @@ services:
       JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-604800000}
       REFRESH_COOKIE_SECURE: "true"
       CORS_ALLOWED_ORIGINS: https://medika.arityodev.my.id
-      # ML_INTERNAL_API_KEY: ${ML_INTERNAL_API_KEY}     # skip — butuh GPU terpisah
-      # CHATBOT_INTERNAL_API_KEY: ${CHATBOT_INTERNAL_API_KEY} # skip — butuh GPU terpisah
+      # ML/chatbot tidak di-deploy. Aktifkan kembali bila service tersebut tersedia.
+      # ML_INTERNAL_API_KEY: ${ML_INTERNAL_API_KEY}
+      # CHATBOT_INTERNAL_API_KEY: ${CHATBOT_INTERNAL_API_KEY}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       SWAGGER_ENABLED: "false"
       SPRING_CACHE_TYPE: redis
@@ -183,7 +184,7 @@ services:
 
   # ─── Frontend (Nginx) ─────────────────────────
   frontend:
-    image: arityo182/medika-frontend:latest
+    image: ${DOCKERHUB_USERNAME:-arityo182}/medika-frontend:${IMAGE_TAG:-latest}
     pull_policy: always
     container_name: medika-frontend
     restart: unless-stopped

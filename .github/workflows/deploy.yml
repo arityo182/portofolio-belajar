@@ -1,0 +1,210 @@
+name: Deploy
+
+on:
+  push:
+    branches: [develop, main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  # Semua test dijalankan sebagai reusable workflow. Build dan deploy hanya
+  # berjalan jika seluruh job CI lulus.
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  build-push:
+    name: Build & Push — ${{ matrix.name }}
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: backend
+            context: medikasentosa
+            image: medika-backend
+            dockerfile: medikasentosa/Dockerfile.prod
+          - name: frontend
+            context: hospital-frontendjs
+            image: medika-frontend
+            dockerfile: hospital-frontendjs/Dockerfile.prod
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set image tags
+        id: vars
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            echo "channel=latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "channel=staging" >> "$GITHUB_OUTPUT"
+          fi
+          echo "sha_tag=sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ steps.vars.outputs.channel }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ steps.vars.outputs.sha_tag }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build-push
+    if: github.ref_name == 'develop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: staging
+      url: https://staging.medika.arityodev.my.id
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy compose file
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: deploy/docker-compose.staging.yml
+          target: ~/medika-staging/
+          strip_components: 1
+
+      - name: Copy monitoring config
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: config
+          target: ~/medika-staging/
+
+      - name: Deploy staging
+        uses: appleboy/ssh-action@v1
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          IMAGE_TAG: sha-${{ github.sha }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: DOCKERHUB_USERNAME,IMAGE_TAG
+          script: |
+            set -euo pipefail
+            cd ~/medika-staging
+            test -f .env || { echo "ERROR: ~/medika-staging/.env belum ada"; exit 1; }
+
+            docker compose -f docker-compose.staging.yml pull
+            docker compose -f docker-compose.staging.yml up -d --wait --wait-timeout 180
+
+            ok=0
+            for i in $(seq 1 36); do
+              if curl -fsS http://127.0.0.1:8090/actuator/health >/dev/null; then
+                ok=1
+                echo "Backend staging sehat setelah ${i} percobaan"
+                break
+              fi
+              sleep 5
+            done
+
+            if [ "$ok" -ne 1 ]; then
+              docker compose -f docker-compose.staging.yml ps
+              docker compose -f docker-compose.staging.yml logs --tail=100 backend
+              exit 1
+            fi
+
+            curl -fsS -o /dev/null http://127.0.0.1:3001/
+            docker compose -f docker-compose.staging.yml ps
+            echo "Staging deployed: IMAGE_TAG=${IMAGE_TAG}"
+
+  deploy-production:
+    name: Deploy to Production
+    needs: build-push
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://medika.arityodev.my.id
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy compose file
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: deploy/docker-compose.prod.yml
+          target: ~/medika/
+          strip_components: 1
+
+      - name: Copy monitoring config
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: config
+          target: ~/medika/
+
+      - name: Deploy production
+        uses: appleboy/ssh-action@v1
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          IMAGE_TAG: sha-${{ github.sha }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: DOCKERHUB_USERNAME,IMAGE_TAG
+          script: |
+            set -euo pipefail
+            cd ~/medika
+            test -f .env || { echo "ERROR: ~/medika/.env belum ada"; exit 1; }
+
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --wait --wait-timeout 180
+
+            ok=0
+            for i in $(seq 1 36); do
+              if curl -fsS http://127.0.0.1:8080/actuator/health >/dev/null; then
+                ok=1
+                echo "Backend production sehat setelah ${i} percobaan"
+                break
+              fi
+              sleep 5
+            done
+
+            if [ "$ok" -ne 1 ]; then
+              docker compose -f docker-compose.prod.yml ps
+              docker compose -f docker-compose.prod.yml logs --tail=100 backend
+              exit 1
+            fi
+
+            curl -fsS -o /dev/null http://127.0.0.1:3000/
+            docker compose -f docker-compose.prod.yml ps
+            echo "Production deployed: IMAGE_TAG=${IMAGE_TAG}"
